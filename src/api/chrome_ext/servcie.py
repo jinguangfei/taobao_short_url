@@ -61,7 +61,9 @@ class ChromeExtService(object):
         self.logger.info(f"get_task : {flag} {short_url} {task_info}")
         return self.api_info.WorkerTaskInfo(
                 task_info=task_info,
-                short_url=short_url,
+                # TODO 暂时不使用short_url
+                #short_url=short_url,
+                short_url= task_info.url if task_info else "",
                 flag=flag
                 )
 

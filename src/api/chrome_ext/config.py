@@ -40,6 +40,10 @@ class TaskInfo(BaseModel):
         item_id, task_type = uniq_id.split("____")
         return cls(item_id=item_id, task_type=task_type)
 
+    @property
+    def url(self) -> str:
+        return f"https://main.m.taobao.com/app/ltao-fe/we-detail/home.html?&id={self.item_id}"
+
 class WorkerInfo(BaseModel):
     cookie : str = ""
     proxies : Optional[Dict] = {
