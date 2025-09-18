@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from fastapi import APIRouter, Query, HTTPException, Body, PlainTextResponse
+from fastapi import APIRouter, Query, HTTPException, Body
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from src.core.ctx import CTX_USER_ID, CTX_Q

@@ -19,6 +19,7 @@ class ShortUrlService(object):
 
     def build_url(self, params: APIInfo.Params):
         headers = self.api_info.headers
+        proxies = params.proxies
         url , query_params = parse_url(self.api_info.url)
         cookies = self.parse_cookie_str(params.cookie)
 
@@ -37,12 +38,12 @@ class ShortUrlService(object):
         query_params["sign"] = sign
         query_params["t"] = t
 
-        return url, query_params, headers, cookies
+        return url, query_params, headers, cookies, proxies
 
     def crawl(self, params: APIInfo.Params) -> str:
-        url, query_params, headers, cookies = self.build_url(params)
+        url, query_params, headers, cookies, proxies = self.build_url(params)
         try:
-            res = requests.get(url, headers=headers, params=query_params, timeout=10, cookies=cookies)
+            res = requests.get(url, headers=headers, params=query_params, timeout=10, cookies=cookies, proxies=proxies, timeout=20)
             return res.text
         except Exception as e:
             print(traceback.format_exc())
