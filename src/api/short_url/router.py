@@ -26,7 +26,7 @@ async def current(
         result = json.loads(redis_pool.hget(CONST_KEY, params.uniq_id))
         logger.info(f"short_url {params.uniq_id} is exists")
     else:
-        body = service.crawl(params)
+        body = await service.crawl(params)
         flag, result = service.check_body(params, body)
         result = result.model_dump_json() if result else None
         if flag == "success":

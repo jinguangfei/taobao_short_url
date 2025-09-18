@@ -1,8 +1,9 @@
 from fastapi import APIRouter
-from .config.router import router as config_router
 from .short_url.router import router as short_url_router
+from .taobao_tk.router import router as taobao_tk_router
+
 
 router = APIRouter(tags=["api"],prefix="/api")
 
-#router.include_router(config_router,prefix="/config")
 router.include_router(short_url_router,prefix="/short_url")
+router.include_router(taobao_tk_router,prefix="/taobao_tk")
