@@ -28,8 +28,8 @@ async def current(
     else:
         body = await service.crawl(params)
         flag, result = service.check_body(params, body)
-        result = result.model_dump_json() if result else None
         if flag == "success":
-            redis_pool.hset(CONST_KEY, params.uniq_id, result)
+            redis_pool.hset(CONST_KEY, params.uniq_id, result.model_dump_json())
+            result = result.model_dump()
     logger.info(f"crawl short_url {params.uniq_id} {flag}")
     return json.dumps({"flag":flag,"result":result},ensure_ascii=False)
