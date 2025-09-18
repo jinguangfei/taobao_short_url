@@ -28,7 +28,7 @@ html_headers = {
 
 class TaskInfo(BaseModel):
     item_id : str
-    task_type : str = "TL_TAOBAO"
+    task_type : str = "LT_TAOBAO"
     timeout : int = 10
 
     @property
@@ -48,8 +48,9 @@ class WorkerInfo(BaseModel):
         }
 
 class WorkerTaskInfo(BaseModel):
-    task_info : TaskInfo
-    short_url : str
+    task_info : Optional[TaskInfo]
+    short_url : Optional[str]
+    flag : str
     
     @property
     def url(self) -> str:
