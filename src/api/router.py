@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from .config.router import router as config_router
+from .chrome_ext.router import router as chrome_ext_router
 
 router = APIRouter(tags=["api"],prefix="/api")
 
-router.include_router(config_router,prefix="/config")
+router.include_router(chrome_ext_router,prefix="/chrome_ext")
