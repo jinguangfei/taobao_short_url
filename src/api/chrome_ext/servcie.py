@@ -44,7 +44,7 @@ class ChromeExtService(object):
             res = requests.post(url, json=data, timeout=10)
             self.logger.info(f"get_short_url : {res.text}")
             result = res.json().get("result",{})
-            short_url = json.loads(result).get("short_url") if result else ""
+            short_url = result.get("short_url") if result else ""
             flag = res.json().get("flag")
         except Exception as e:
             logger.error(traceback.format_exc())
