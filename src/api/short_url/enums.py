@@ -9,3 +9,4 @@ class StrEnum(str, Enum):
 class ShortTargetUrlType(StrEnum):
     TAOBAO = "TAOBAO"
     LT_TAOBAO = "LT_TAOBAO"
+    M_TAOBAO = "M_TAOBAO"

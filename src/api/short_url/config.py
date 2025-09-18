@@ -39,6 +39,7 @@ class APIInfo(object):
         target_url_dict : ClassVar[Dict[ShortTargetUrlType, str]]= {
             ShortTargetUrlType.TAOBAO: "https://item.taobao.com/item.htm?id={item_id}",
             ShortTargetUrlType.LT_TAOBAO: "https://main.m.taobao.com/app/ltao-fe/we-detail/home.html?id={item_id}",
+            ShortTargetUrlType.M_TAOBAO: "https://pages-g.m.taobao.com/wow/z/app/detail-next/item/index?x-ssr=true&id={item_id}",
         }
 
         @property
