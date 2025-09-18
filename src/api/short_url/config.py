@@ -1,5 +1,5 @@
 import time
-from typing import List, Dict, ClassVar
+from typing import List, Dict, ClassVar, Optional
 from pydantic import BaseModel 
 from .enums import ShortTargetUrlType
 
@@ -34,7 +34,7 @@ class APIInfo(object):
         targetId : str
         targetUrlType : ShortTargetUrlType
         cookie : str = ""
-        proxies : Dict = {}
+        proxies : Optional[Dict] = {}
 
         target_url_dict : ClassVar[Dict[ShortTargetUrlType, str]]= {
             ShortTargetUrlType.TAOBAO: "https://item.taobao.com/item.htm?id={item_id}",
