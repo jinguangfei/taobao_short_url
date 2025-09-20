@@ -58,7 +58,7 @@ class WorkerTaskInfo(BaseModel):
     
     @property
     def url(self) -> str:
-        return f"https://main.m.taobao.com/app/ltao-fe/we-detail/home.html?&id={self.task_info.item_id}"
+        return f"https://main.m.taobao.com/app/ltao-fe/we-detail/home.html?&id={self.item_id}"
 
 class OverTaskInfo(BaseModel):
     task_info : TaskInfo
