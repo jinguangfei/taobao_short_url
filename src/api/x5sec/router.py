@@ -10,7 +10,7 @@ from .config import APIInfo
 
 router = APIRouter()
 @router.post("/", summary="获取x5sec",response_class=PlainTextResponse)
-async def current(
+def current(
     params: APIInfo.Params = Body(..., description="参数"),
 ):
     cookie_dict = parse_cookie_str(params.cookie_str)
