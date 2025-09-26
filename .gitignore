@@ -136,6 +136,7 @@ Thumbs.db
 
 # Project specific
 tmp/
+migrations/
 logs/
 *.log
 .env.local

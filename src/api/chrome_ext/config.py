@@ -3,6 +3,19 @@ from typing import List, Dict, ClassVar, Optional
 from pydantic import BaseModel 
 
 main_query_fields = ["ttid"]
+CONFIG_DATA = {
+        "name": '陶特详情',
+        "type": 'network',
+        "domain": 'taobao.com',
+        "url_whitelist": ['mtop.taobao.ltao.detail.h5.data.get'],
+        "url_blacklist": ["_____tmd_____"],
+        "body_whitelist": [],
+        "body_blacklist": ['FAIL_SYS_TOKEN',],
+        "web": True,
+        "timeout": 12,
+        "break_flag": ["login","deny"]
+    }
+
 
 api_headers = {
     'accept': '*/*',
@@ -52,8 +65,10 @@ class WorkerInfo(BaseModel):
         }
 
 class WorkerTaskInfo(BaseModel):
-    task_info : Optional[TaskInfo]
-    short_url : Optional[str]
+    task_info : Optional[TaskInfo] = None
+    short_url : Optional[str] = None
+    config : Optional[dict] = CONFIG_DATA
+    cookie : Optional[str] = ""
     flag : str
     
     @property
@@ -76,6 +91,7 @@ class APIInfo(object):
     WorkerInfo = WorkerInfo
     WorkerTaskInfo = WorkerTaskInfo
     OverTaskInfo = OverTaskInfo
+    CONFIG_DATA = CONFIG_DATA
 
     short_url_api = "http://123.56.44.124:9460/api/short_url/"
     headers = api_headers

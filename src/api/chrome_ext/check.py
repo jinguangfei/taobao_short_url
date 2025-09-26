@@ -25,3 +25,29 @@ def check_body( body : Union[str, None]) -> tuple[str, str]:
     else:
         body_info = "success"
     return body, body_info
+
+def pc_check_body(body : Union[str, None]) -> tuple[str, str]:
+    if body is None:
+        return "{}", "not_have_resource"
+    body_info = ""
+    start = body.find("mtopjsonp")
+    if start>-1:
+        body = body[start+body.find("("):-1].replace("({","{",1)
+    deny_flag = body.find("action=deny")>-1 or body.find("pureDenyWait=")> -1
+    slide_flag = body.find("punish?x5secdata")>-1
+    login_flag = body.find("login.jhtml")>-1 or body.find("login.htm")>-1 or body.find(
+"登录查看更多优惠")>-1
+    success_flag = body.count("sku2info") >= 1
+    if login_flag:
+        body_info = "login"
+    elif success_flag :
+        body_info = "success"
+    elif len(body)<10:
+        body_info = "not_have_resources"
+    elif deny_flag: 
+        body_info = "deny"
+    elif slide_flag: 
+        body_info = "slide"
+    else:
+        body_info = "success"
+    return body, body_info

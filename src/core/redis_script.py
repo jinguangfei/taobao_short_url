@@ -1,15 +1,15 @@
 from redis import StrictRedis, ConnectionPool
 from typing import Callable, Tuple, Optional
 import time
+from src.settings import settings
 
 class RedisSettings(object):
-    REDIS_HOST: str = "127.0.0.1"
-    REDIS_HOST: str = "39.106.91.99"
-    REDIS_PORT: int = 6379
-    REDIS_DB: int = 12
-    REDIS_PASSWORD: str = "zhihai_niersen_cookie_use_456789047"
-    REDIS_MAX_CONNECTIONS: int = 100
-    REDIS_SECRET_KEY : str = "dcx"
+    REDIS_HOST: str = settings.REDIS_HOST
+    REDIS_PORT: int = settings.REDIS_PORT
+    REDIS_DB: int = settings.REDIS_DB
+    REDIS_PASSWORD: str = settings.REDIS_PASSWORD
+    REDIS_MAX_CONNECTIONS: int = settings.REDIS_MAX_CONNECTIONS
+    REDIS_SECRET_KEY : str = settings.REDIS_SECRET_KEY
 
 def get_redis_pool(settings : RedisSettings) -> StrictRedis:
     return StrictRedis(connection_pool=ConnectionPool(

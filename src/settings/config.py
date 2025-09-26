@@ -32,25 +32,21 @@ class Settings(BaseSettings):
     LOGS_ROOT: str = os.path.join(BASE_DIR, "app/logs")
 
     # JWT配置
-    SECRET_KEY: str
-    JWT_ALGORITHM: str
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int
+    SECRET_KEY: str = "your-secret-key-here-change-this-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # 数据库配置
     @property
     def TORTOISE_ORM(self) -> dict:
         connections = {
-            #"sqlite": {
-            #    "engine": "tortoise.backends.sqlite",
-            #    "credentials": {"file_path": f"{self.BASE_DIR}/db.sqlite3"},
-            #}
             "postgres": {
                 "engine": "tortoise.backends.asyncpg",
                 "credentials": {
-                    "host": "localhost",
-                    "port": 5432,
+                    "host": "47.94.223.86",
+                    "port": 5002,
                     "user": "dcx",
-                    "password": "123456",
+                    "password": "psql@dcx1239",
                     "database": "dcx_admin",
                     "server_settings": {
                         "timezone": "Asia/Shanghai",
@@ -65,14 +61,8 @@ class Settings(BaseSettings):
             "apps": {
                 "models": {
                     "models": [
-                        "src.admin.models", 
-                        "src.account.info.models",
-                        "src.account.cost.models",
-                        "src.gateway.sync.base.models",
-                        "src.gateway.sync.user.models",
-                        "src.gateway.sync.call.models",
-                        "src.gateway.async_.base.models",
-                        "aerich.models"
+                        "aerich.models",
+                        "src.api.tb_cookie.models", 
                     ],
                     "default_connection": "postgres",
                 },
@@ -81,15 +71,15 @@ class Settings(BaseSettings):
             "timezone": "Asia/Shanghai",
         }
 
-    DATETIME_FORMAT: str
+    DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 
     # Redis配置
-    REDIS_HOST: str
-    REDIS_PORT: int
-    REDIS_DB: int
-    REDIS_PASSWORD: str
+    REDIS_HOST: str = "47.94.223.86"
+    REDIS_PORT: int = 5003
+    REDIS_DB: int = 0
+    REDIS_PASSWORD: str = "redis@dcx1239"
     REDIS_MAX_CONNECTIONS: int = 100
-    REDIS_SECRET_KEY: str
+    REDIS_SECRET_KEY: str = "dcx"
 
     REDIS_API_TOKEN_LIMIT_KEY: str = "api_token_limit"
 
