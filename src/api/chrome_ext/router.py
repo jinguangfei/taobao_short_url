@@ -38,7 +38,7 @@ async def get_task(
     return await chrome_ext_service.get_task(worker_info)
 
 @router.post("/over_task", summary="完成任务")
-def over_task(
+async def over_task(
     over_task_info : APIInfo.OverTaskInfo
 ):
-    return chrome_ext_service.over_task(over_task_info)
+    return await chrome_ext_service.over_task(over_task_info)

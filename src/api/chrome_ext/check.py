@@ -6,7 +6,7 @@ def check_body( body : Union[str, None]) -> tuple[str, str]:
     start = body.find("mtopjsonp")
     if start>-1:
         body = body[start+body.find("("):-1].replace("({","{",1)
-    deny_flag = body.find("action=deny")>-1 or body.find("pureDenyWait=")> -1 or body.find("FAIL_SYS_USER") > -1
+    deny_flag = body.find("action=deny")>-1 or body.find("pureDenyWait=")> -1 or body.find("bixi") > -1
     deny2_flag = body.find(u"立即登录")>-1
     slide_flag = body.find("action=captcha")>-1 
     login_flag = body.find('"popData":{}')>-1 or body.find("login.jhtml")>-1 or body.find("window.location.href")>-1 or body.find(u"立即登录")>-1

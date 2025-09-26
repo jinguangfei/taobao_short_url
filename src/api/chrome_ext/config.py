@@ -1,6 +1,7 @@
 import time
 from typing import List, Dict, ClassVar, Optional
-from pydantic import BaseModel 
+from pydantic import BaseModel, Field
+from datetime import datetime
 
 main_query_fields = ["ttid"]
 CONFIG_DATA = {
@@ -42,16 +43,18 @@ html_headers = {
 class TaskInfo(BaseModel):
     item_id : str
     task_type : str = "LT_TAOBAO"
+    # 当前日期
+    date: Optional[str] = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
     timeout : int = 10
 
     @property
     def uniq_id(self) -> str:
-        return f"{self.item_id}____{self.task_type}"
+        return f"{self.date}____{self.item_id}____{self.task_type}"
     
     @classmethod
     def gen_by_uniq_id(cls, uniq_id : str) -> tuple[str, str]:
-        item_id, task_type = uniq_id.split("____")
-        return cls(item_id=item_id, task_type=task_type)
+        date, item_id, task_type = uniq_id.split("____")
+        return cls(date=date, item_id=item_id, task_type=task_type)
 
     @property
     def url(self) -> str:
@@ -68,7 +71,7 @@ class WorkerTaskInfo(BaseModel):
     task_info : Optional[TaskInfo] = None
     short_url : Optional[str] = None
     config : Optional[dict] = CONFIG_DATA
-    cookie : Optional[str] = ""
+    cookie : Optional[dict] = {}
     flag : str
     
     @property
@@ -77,7 +80,7 @@ class WorkerTaskInfo(BaseModel):
 
 class OverTaskInfo(BaseModel):
     task_info : TaskInfo
-    worker_info : WorkerInfo
+    cookie : dict
     result : str
     real_url : str
     ua : str

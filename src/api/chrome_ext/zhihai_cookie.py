@@ -1,5 +1,7 @@
 import asyncio
+import traceback
 import json
+from re import I
 from curl_cffi.requests import AsyncSession
 from curl_cffi.requests.models import Response
 
@@ -29,16 +31,8 @@ class MyQueue(object):
                 "key": key,
                 "add_t": add_t
             }
-            '''
-            curl -X 'PUT' \
-                'http://123.56.44.124:9461/cookie/?view_name=chrome_ext' \
-                -H 'accept: application/json' \
-                -H 'Content-Type: application/x-www-form-urlencoded' \
-                -d 'key=96689&add_t=100'
-            '''
             async with AsyncSession() as s:
                 res = await s.put(url, data=data)
-                print(res.text)
         except Exception as e:
             print(e)
             pass
@@ -49,15 +43,24 @@ class MyQueue(object):
             data = {
                 "key": key
             }
-            print(url)
-            print(data)
             async with AsyncSession() as s:
                 res = await s.delete(url, data=data)
-                print(res.text)
         except Exception as e:
             print(e)
             pass
 
+    async def update_flag(self, key : str, flag : int, view_name : str = ""):
+        url = self.url + "update_flag?" + f"view_name={view_name}"
+        try:
+            data = {
+                "key": key,
+                "flag": flag
+            }
+            async with AsyncSession() as s:
+                res = await s.put(url, data=data)
+        except Exception as e:
+            print(traceback.format_exc())
+            pass
 
 if __name__ == "__main__":
     item = MyQueue(queue_name="cookie")
