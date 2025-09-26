@@ -91,7 +91,7 @@ class ChromeExtService(object):
         if not task_id:
             worker_task_info = self.api_info.WorkerTaskInfo(flag="not_have_task")
         else:
-            task_info = self.api_info.TaskInfo(item_id=task_id)
+            task_info = self.api_info.TaskInfo.gen_by_uniq_id(task_id)
             worker_task_info = await self.prev_task(task_info, worker_info)
         self.logger.info(f"get_task : {worker_task_info.flag} {worker_task_info.short_url} {worker_task_info.task_info}")
         return worker_task_info
