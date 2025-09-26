@@ -62,7 +62,7 @@ class ChromeExtService(object):
             return None,None
         use_times = cookie_info.get("use_times",0)
         cookie_id = cookie_info.get("id")
-        if use_times > 0 and use_times % 20 == 0:
+        if use_times > 0 and use_times % 9 == 0:
             await self.cookie_queue.wait(cookie_id,60*60,view_name=view_name)
         async def delete_cookie():
             await self.cookie_queue.delete(cookie_id,view_name=view_name)
