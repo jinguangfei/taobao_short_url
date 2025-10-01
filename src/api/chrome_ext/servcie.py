@@ -121,7 +121,7 @@ class ChromeExtService(object):
                 case "success":
                     await self.cookie_queue.update_flag(cookie_id, 1, view_name="chrome_ext")
                 case "deny":
-                    await self.cookie_queue.wait(cookie_id, 60*60, view_name="chrome_ext")
+                    await self.cookie_queue.wait(cookie_id, 60*60*3, view_name="chrome_ext")
                 case "login":
                     await self.cookie_queue.delete(cookie_id, view_name="chrome_ext")
         else:
