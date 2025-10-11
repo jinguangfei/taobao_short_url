@@ -18,6 +18,7 @@ from .task import Task
 from .check import check_body
 from .config import APIInfo, config_dict
 from ..x5sec.service import get_x5sec
+from .utils import get_mi_id
 from .zhihai_cookie import MyQueue
 
 class ChromeExtService(object):
@@ -88,11 +89,15 @@ class ChromeExtService(object):
         if cookie_info_dict and cookie_info_dict.get("x5sec"):
             cookie_info["cookie"] = f"{cookie_info['cookie']};x5sec={cookie_info_dict.get('x5sec')}"
         #item_url = f"https://item.taobao.com/item.htm?id={task_info.item_id}&mi_id=2Sm--RDgLoff{random.randint(100,999)}iYqoYNoyUzVDCG6Sn{random.randint(100000,990009)}4nkBfUBhpiWRkaHdP_jxY5vAdimu_6derZWZ{random.randint(100000,990009)}Vqa96g"
-        item_url = f"https://item.taobao.com/item.htm?id={task_info.item_id}&BSjSqvPacvDvWjCyEl75M-lSHW2pogmJJeCrkeuvVAZNSu5nitpeTsCsFZlNxu4uEzaTtfpIQQLhwcQCyC7YKg"
+        if task_info.task_type == "TAOBAO":
+            mi_id = await get_mi_id()
+            target_url = f"https://item.taobao.com/item.htm?id={task_info.item_id}&mi_id={mi_id}"
+        else:
+            target_url = short_url
+
         return self.api_info.WorkerTaskInfo(
                 task_info=task_info,
-                #short_url=short_url,
-                short_url=item_url,
+                short_url=target_url,
                 cookie=cookie_info,
                 flag=flag,
                 config=config_dict[task_info.task_type]
