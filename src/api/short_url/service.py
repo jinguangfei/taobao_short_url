@@ -8,6 +8,7 @@ import httpx
 from typing import Dict, Union
 
 from .config import APIInfo
+from .utils import get_mi_id
 from ..utils import parse_url, md5_data
 from ..taobao_tk.service import TaobaoTkService
 
@@ -23,15 +24,24 @@ class ShortUrlService(object):
 
     async def build_url(self, params: APIInfo.Params):
         headers = self.api_info.headers
-        proxies = params.proxies
+        _proxies = {
+            "http": "http://LVMJTEaf:XW2zzQtS@122.228.200.202:19258",
+            "https": "http://LVMJTEaf:XW2zzQtS@122.228.200.202:19258",
+        }
+        proxies = params.proxies or _proxies
         url , query_params = parse_url(self.api_info.url)
         tk_cookie = await self.taobao_tk_service.get_taobao_tk()
         cookies = self.parse_cookie_str(params.cookie+f";{tk_cookie}")
+        if params.targetUrlType == "TAOBAO":
+            mi_id = await get_mi_id()
+            target_url = f"https://item.taobao.com/item.htm?id={params.targetId}&mi_id={mi_id}"
+        else:
+            target_url = params.targetUrl
 
         data = {
             "bizCode":"1",
             "extendInfo":f"{{\"targetId\":\"{params.targetId}\"}}",
-            "targetUrl":params.targetUrl,
+            "targetUrl":target_url,
         }
         data_str = json.dumps(data).replace(" ", "")
         print(cookies.get("_m_h5_tk",""))
