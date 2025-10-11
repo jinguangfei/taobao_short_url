@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # JWT配置
     SECRET_KEY: str = "your-secret-key-here-change-this-in-production"
     JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30
 
     # 数据库配置
     @property
@@ -62,6 +62,12 @@ class Settings(BaseSettings):
                 "models": {
                     "models": [
                         "aerich.models",
+                        "src.admin.models", 
+                        "src.account.info.models",
+                        "src.account.cost.models",
+                        "src.gateway.sync.base.models",
+                        "src.gateway.sync.user.models",
+                        "src.gateway.sync.call.models",
                         "src.api.tb_cookie.models", 
                     ],
                     "default_connection": "postgres",

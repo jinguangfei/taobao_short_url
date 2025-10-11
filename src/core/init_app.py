@@ -6,6 +6,8 @@ from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise.expressions import Q
 
+from src.admin.controllers.api import api_controller
+from src.admin.controllers.user import UserCreate, user_controller
 from src.core.exceptions import (
     DoesNotExist,
     DoesNotExistHandle,
@@ -19,13 +21,17 @@ from src.core.exceptions import (
     ResponseValidationHandle,
 )
 from src.loger import logger
+from src.admin.models.admin import Api, Menu, Role
+from src.admin.schemas.menus import MenuType
 from src.settings.config import settings
 
-from .middlewares import BackGroundTaskMiddleware
+from starlette.middleware.gzip import GZipMiddleware
+from .middlewares import BackGroundTaskMiddleware, HttpAuditLogMiddleware
 
 
 def make_middlewares():
     middleware = [
+        Middleware(GZipMiddleware, minimum_size=1000),
         Middleware(
             CORSMiddleware,
             allow_origins=settings.CORS_ORIGINS,
@@ -34,6 +40,14 @@ def make_middlewares():
             allow_headers=settings.CORS_ALLOW_HEADERS,
         ),
         Middleware(BackGroundTaskMiddleware),
+        Middleware(
+            HttpAuditLogMiddleware,
+            methods=["GET", "POST", "PUT", "DELETE"],
+            exclude_paths=[
+                "/docs",
+                "/openapi.json",
+            ],
+        ),
     ]
     return middleware
 
@@ -48,6 +62,209 @@ def register_exceptions(app: FastAPI):
 
 def register_routers(app: FastAPI, router: APIRouter, prefix: str = "/"):
     app.include_router(router, prefix=prefix)
+
+
+async def init_superuser():
+    user = await user_controller.model.exists()
+    if not user:
+        await user_controller.create_user(
+            UserCreate(
+                username="admin",
+                email="admin@admin.com",
+                password="123456",
+                is_active=True,
+                is_superuser=True,
+            )
+        )
+
+
+async def init_menus():
+    menus = await Menu.exists()
+    if not menus:
+        parent_menu = await Menu.create(
+            menu_type=MenuType.CATALOG,
+            name="系统管理",
+            path="/system",
+            order=1,
+            parent_id=0,
+            icon="carbon:gui-management",
+            is_hidden=False,
+            component="Layout",
+            keepalive=False,
+            redirect="/system/user",
+        )
+        children_menu = [
+            Menu(
+                menu_type=MenuType.MENU,
+                name="用户管理",
+                path="user",
+                order=1,
+                parent_id=parent_menu.id,
+                icon="material-symbols:person-outline-rounded",
+                is_hidden=False,
+                component="/system/user",
+                keepalive=False,
+            ),
+            Menu(
+                menu_type=MenuType.MENU,
+                name="角色管理",
+                path="role",
+                order=2,
+                parent_id=parent_menu.id,
+                icon="carbon:user-role",
+                is_hidden=False,
+                component="/system/role",
+                keepalive=False,
+            ),
+            Menu(
+                menu_type=MenuType.MENU,
+                name="菜单管理",
+                path="menu",
+                order=3,
+                parent_id=parent_menu.id,
+                icon="material-symbols:list-alt-outline",
+                is_hidden=False,
+                component="/system/menu",
+                keepalive=False,
+            ),
+            Menu(
+                menu_type=MenuType.MENU,
+                name="API管理",
+                path="api",
+                order=4,
+                parent_id=parent_menu.id,
+                icon="ant-design:api-outlined",
+                is_hidden=False,
+                component="/system/api",
+                keepalive=False,
+            ),
+            Menu(
+                menu_type=MenuType.MENU,
+                name="部门管理",
+                path="dept",
+                order=5,
+                parent_id=parent_menu.id,
+                icon="mingcute:department-line",
+                is_hidden=False,
+                component="/system/dept",
+                keepalive=False,
+            ),
+            Menu(
+                menu_type=MenuType.MENU,
+                name="审计日志",
+                path="auditlog",
+                order=6,
+                parent_id=parent_menu.id,
+                icon="ph:clipboard-text-bold",
+                is_hidden=False,
+                component="/system/auditlog",
+                keepalive=False,
+            ),
+        ]
+        await Menu.bulk_create(children_menu)
+
+        parent_menu = await Menu.create(
+            menu_type=MenuType.CATALOG,
+            name="账户",
+            path="/account",
+            order=2,
+            parent_id=0,
+            icon="material-symbols:featured-play-list-outline",
+            is_hidden=False,
+            component="Layout",
+            keepalive=False,
+            redirect="/account/info",
+        )
+        children_menu = [
+            Menu(
+                menu_type=MenuType.MENU,
+                name="账户信息",
+                path="info",
+                order=1,
+                parent_id=parent_menu.id,
+                icon="mdi-air-filter",
+                is_hidden=False,
+                component="/account/info",
+                keepalive=False,
+            ),
+            Menu(
+                menu_type=MenuType.MENU,
+                name="消费记录",
+                path="cost",
+                order=2,
+                parent_id=parent_menu.id,
+                icon="mdi-air-filter",
+                is_hidden=False,
+                component="/account/cost",
+                keepalive=False,
+            ),
+            Menu(
+                menu_type=MenuType.MENU,
+                name="账户列表",
+                path="list",
+                order=3,
+                parent_id=parent_menu.id,
+                icon="mdi-air-filter",
+                is_hidden=False,
+                component="/account/list",
+                keepalive=False,
+            ),
+        ]
+        await Menu.bulk_create(children_menu)
+
+        parent_menu = await Menu.create(
+            menu_type=MenuType.CATALOG,
+            name="同步网关",
+            path="/gateway/sync",
+            order=3,
+            parent_id=0,
+            icon="material-symbols:featured-play-list-outline",
+            is_hidden=False,
+            component="Layout",
+            keepalive=False,
+            redirect="/gateway/sync/base",
+        )
+        children_menu = [
+            Menu(
+                menu_type=MenuType.MENU,
+                name="同步API",
+                path="base",
+                order=1,
+                parent_id=parent_menu.id,
+                icon="mdi-air-filter",
+                is_hidden=False,
+                component="/gateway/sync/base",
+                keepalive=False,
+            ),
+            Menu(
+                menu_type=MenuType.MENU,
+                name="用户同步API",
+                path="user",
+                order=2,
+                parent_id=parent_menu.id,
+                icon="mdi-air-filter",
+                is_hidden=False,
+                component="/gateway/sync/user",
+                keepalive=False,
+            ),
+            Menu(
+                menu_type=MenuType.MENU,
+                name="用户同步API调用",
+                path="call",
+                order=3,
+                parent_id=parent_menu.id,
+                icon="mdi-air-filter",
+                is_hidden=False,
+                component="/gateway/sync/call",
+                keepalive=False,
+            ),
+        ]
+        await Menu.bulk_create(children_menu)
+        
+async def init_apis():
+    apis = await api_controller.model.exists()
+    if not apis:
+        await api_controller.refresh_api()
 
 
 async def init_db():
@@ -69,5 +286,34 @@ async def init_db():
     print("upgrade")
 
 
+async def init_roles():
+    roles = await Role.exists()
+    if not roles:
+        admin_role = await Role.create(
+            name="管理员",
+            desc="管理员角色",
+        )
+        user_role = await Role.create(
+            name="普通用户",
+            desc="普通用户角色",
+        )
+
+        # 分配所有API给管理员角色
+        all_apis = await Api.all()
+        await admin_role.apis.add(*all_apis)
+        # 分配所有菜单给管理员和普通用户
+        all_menus = await Menu.all()
+        await admin_role.menus.add(*all_menus)
+        await user_role.menus.add(*all_menus)
+
+        # 为普通用户分配基本API
+        basic_apis = await Api.filter(Q(method__in=["GET"]) | Q(tags="基础模块"))
+        await user_role.apis.add(*basic_apis)
+
+
 async def init_data():
     await init_db()
+    await init_superuser()
+    await init_menus()
+    await init_apis()
+    await init_roles()

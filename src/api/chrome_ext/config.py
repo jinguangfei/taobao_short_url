@@ -1,10 +1,23 @@
 import time
-from typing import List, Dict, ClassVar, Optional
+from typing import List, Dict, ClassVar, Optional, Type
 from pydantic import BaseModel, Field
 from datetime import datetime
+from enum import StrEnum, Enum
 
 main_query_fields = ["ttid"]
-CONFIG_DATA = {
+TAOBAO_CONFIG = {
+        "name": '淘宝详情',
+        "type": 'network',
+        "domain": '.com',
+        "url_whitelist": ['mtop.taobao.pcdetail.data.get','item.htm'],
+        "url_blacklist": ["_____tmd_____"],
+        "body_whitelist": ['sku2info','punish?x5secdata','action=deny','pureDenyWait='],
+        "body_blacklist": ['FAIL_SYS_TOKEN',],
+        "web": True,
+        "timeout": 12,
+        "break_flag": ["login","deny"]
+    }
+LT_TAOBAO_CONFIG = {
         "name": '陶特详情',
         "type": 'network',
         "domain": 'taobao.com',
@@ -16,6 +29,10 @@ CONFIG_DATA = {
         "timeout": 12,
         "break_flag": ["login","deny"]
     }
+config_dict = {
+    "LT_TAOBAO" : LT_TAOBAO_CONFIG,
+    "TAOBAO" : TAOBAO_CONFIG
+}
 
 
 api_headers = {
@@ -39,22 +56,27 @@ html_headers = {
     "accept-language":"zh-CN,zh;q=0.9"
 }
 
+class TaskType(StrEnum):
+    TAOBAO = "TAOBAO"
+    LT_TAOBAO = "LT_TAOBAO"
+
+
 
 class TaskInfo(BaseModel):
     item_id : str
-    task_type : str = "LT_TAOBAO"
+    task_type : TaskType = TaskType.LT_TAOBAO
     # 当前日期
-    date: Optional[str] = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
+    batch : Optional[str] = Field(default_factory=lambda: datetime.now().strftime("%Y%m%d"))
     timeout : int = 10
 
     @property
     def uniq_id(self) -> str:
-        return f"{self.date}____{self.item_id}____{self.task_type}"
+        return f"{self.batch}____{self.item_id}____{self.task_type}"
     
     @classmethod
     def gen_by_uniq_id(cls, uniq_id : str) -> tuple[str, str]:
-        date, item_id, task_type = uniq_id.split("____")
-        return cls(date=date, item_id=item_id, task_type=task_type)
+        batch, item_id, task_type = uniq_id.split("____")
+        return cls(batch=batch, item_id=item_id, task_type=task_type)
 
     @property
     def url(self) -> str:
@@ -70,7 +92,7 @@ class WorkerInfo(BaseModel):
 class WorkerTaskInfo(BaseModel):
     task_info : Optional[TaskInfo] = None
     short_url : Optional[str] = None
-    config : Optional[dict] = CONFIG_DATA
+    config : Optional[dict] = config_dict[TaskType.LT_TAOBAO]
     cookie : Optional[dict] = {}
     flag : str
     
@@ -94,7 +116,6 @@ class APIInfo(object):
     WorkerInfo = WorkerInfo
     WorkerTaskInfo = WorkerTaskInfo
     OverTaskInfo = OverTaskInfo
-    CONFIG_DATA = CONFIG_DATA
 
     short_url_api = "http://123.56.44.124:9460/api/short_url/"
     headers = api_headers

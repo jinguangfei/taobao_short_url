@@ -64,6 +64,6 @@ class MyQueue(object):
 
 if __name__ == "__main__":
     item = MyQueue(queue_name="cookie")
-    print(asyncio.run(item.get_one_info(add_t=12,view_name="chrome_ext")))
-    asyncio.run(item.wait(key="96689",add_t=100,view_name="chrome_ext"))
-    asyncio.run(item.delete(key="96689",view_name="chrome_ext"))
+    print(asyncio.run(item.get_one_info(key=97733,add_t=12,view_name="chrome_ext")))
+    #asyncio.run(item.wait(key="96689",add_t=100,view_name="chrome_ext"))
+    #asyncio.run(item.delete(key="96689",view_name="chrome_ext"))
