@@ -71,7 +71,7 @@ class ChromeExtService(object):
                 await self.cookie_queue.delete(cookie_id,view_name=view_name)
         return cookie_info
 
-    async def prev_task(self, task_info : APIInfo.TaskInfo, worker_info : APIInfo.WorkerInfo) -> Optional[APIInfo.WorkerTaskInfo]:
+    async def prev_task_short_url(self, task_info : APIInfo.TaskInfo, worker_info : APIInfo.WorkerInfo) -> Optional[APIInfo.WorkerTaskInfo]:
         cookie_info, short_url = {}, ""
         user_id = CTX_USER_ID.get()
         # 获取cookie
@@ -99,14 +99,45 @@ class ChromeExtService(object):
                     config=config_dict[task_info.task_type]
                     )
 
+    async def prev_task_mi_id(self, task_info : APIInfo.TaskInfo, worker_info : APIInfo.WorkerInfo) -> Optional[APIInfo.WorkerTaskInfo]:
+        cookie_info = {}
+        user_id = CTX_USER_ID.get()
+        # 获取cookie
+        cookie_info = await self.get_one_cookie(user_id,view_name="chrome_ext",add_t=12)
+        # 获取short_url
+        if not cookie_info:
+            flag = "not_have_cookie"
+        else:
+            mi_id = await get_mi_id()
+            flag = "not_have_mi_id" if not mi_id else "success"
+        self.logger.info(f"prev_task : {user_id} {cookie_info.get('id')} flag:{flag}")
+        if flag in ["not_have_cookie","not_have_mi_id"]:
+            return self.api_info.WorkerTaskInfo(flag=flag)
+        else:
+            target_url = task_info.base_url.format(item_id=task_info.item_id, mi_id=mi_id)
+            x5sec = self.redis.hget(self.x5sec_key, cookie_info.get("id"))
+            if x5sec:
+                cookie_info["cookie"] = f"{cookie_info['cookie']};x5sec={x5sec.decode()}"
+            return self.api_info.WorkerTaskInfo(
+                    task_info=task_info,
+                    short_url=target_url,
+                    cookie=cookie_info,
+                    flag="success",
+                    config=config_dict[task_info.task_type]
+                    )
+
+    async def prev_task(self, task_info : APIInfo.TaskInfo, worker_info : APIInfo.WorkerInfo) -> Optional[APIInfo.WorkerTaskInfo]:
+        return await self.prev_task_mi_id(task_info, worker_info)
+
     async def get_task(self, worker_info : APIInfo.WorkerInfo) -> Union[APIInfo.WorkerTaskInfo, None]:
         task_id = self.task.get()
+        user_id = CTX_USER_ID.get()
         if not task_id:
             worker_task_info = self.api_info.WorkerTaskInfo(flag="not_have_task")
         else:
             task_info = self.api_info.TaskInfo.gen_by_uniq_id(task_id)
             worker_task_info = await self.prev_task(task_info, worker_info)
-        self.logger.info(f"get_task : {worker_task_info.flag} {worker_task_info.short_url} {worker_task_info.task_info}")
+        self.logger.info(f"get_task user_id:{user_id} task:{worker_task_info.task_info.uniq_id} url:{worker_task_info.short_url}")
         return worker_task_info
 
     def _parse_cookie_str(self, cookie_str : str) -> dict:

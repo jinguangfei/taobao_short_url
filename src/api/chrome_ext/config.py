@@ -82,6 +82,14 @@ class TaskInfo(BaseModel):
     def url(self) -> str:
         return f"https://main.m.taobao.com/app/ltao-fe/we-detail/home.html?&id={self.item_id}"
 
+    @property
+    def base_url(self) -> str:
+        if self.task_type == "LT_TAOBAO":
+            return "https://main.m.taobao.com/app/ltao-fe/we-detail/home.html?&id={item_id}&mi_id={mi_id}"
+        else:
+            return "https://item.taobao.com/item.htm?id={item_id}&mi_id={mi_id}"
+
+
 class WorkerInfo(BaseModel):
     cookie : str = ""
     proxies : Optional[Dict] = {
