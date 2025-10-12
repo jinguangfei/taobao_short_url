@@ -21,7 +21,9 @@ router = APIRouter()
 async def current(
     params: APIInfo.Params = Body(..., description="参数"),
 ):
-    body = await service.crawl(params)
-    flag, result = service.check_body(params, body)
-    logger.info(f"crawl mi_id {flag} {result}")
-    return json.dumps({"flag":flag,"result":result},ensure_ascii=False)
+    mi_id = service.get_mi_id()
+    if not mi_id:
+        await service.crawl(params)
+        mi_id = service.get_mi_id()
+    logger.info(f"crawl mi_id {mi_id}")
+    return json.dumps({"flag":"success","result":mi_id},ensure_ascii=False)

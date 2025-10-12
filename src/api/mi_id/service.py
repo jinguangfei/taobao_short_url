@@ -11,11 +11,16 @@ from .config import APIInfo
 from ..utils import parse_url, md5_data
 from ..taobao_tk.service import TaobaoTkService
 
+from src.core.redis_script import redis_pool,zpop_min
+from src.loger import logger
+
 
 class MiIdService(object):
     def __init__(self):
+        self.redis = redis_pool
         self.api_info = APIInfo
         self.taobao_tk_service = TaobaoTkService()
+        self.mi_id_key = "mi_id"
 
     def parse_cookie_str(self, cookie_str : str) -> dict:
         cookie_dict = {i.split("=")[0]:i.split("=",1)[1] for i in cookie_str.replace("; ",";").split(";") if len(i.split("="))>1}
@@ -34,14 +39,11 @@ class MiIdService(object):
 
         data = {
         }
-        print(query_params)
         data_str = json.dumps(data).replace(" ", "")
         data_str = query_params.get("data")
 
         tk_g = re.search(r"_m_h5_tk=(.*?)_",tk_cookie)
         tk = tk_g.group(1) if tk_g else ""
-        print(tk)
-        print(cookies)
 
         t, sign, data_str = md5_data(tk, data_str, app_key="12574478")
         query_params["data"] = data_str
@@ -50,13 +52,22 @@ class MiIdService(object):
 
         return url, query_params, headers, cookies, proxies
 
+    def get_mi_id(self, add_t : int = 60 * 5) -> str:
+        self.redis.zremrangebyscore(self.mi_id_key, 0, int(time.time())-add_t)
+        mi_id, t = zpop_min(keys=[self.mi_id_key])
+        if mi_id:
+            return mi_id.decode()
+        return ""
+
     async def crawl(self, params: APIInfo.Params) -> str:
         url, query_params, headers, cookies, proxies = await self.build_url(params)
         try:
             res = requests.get(url, headers=headers, params=query_params, timeout=10, cookies=cookies, proxies=proxies)
-            return res.text
+            flag, result = self.check_body(params, res.text)
+            if result:
+                self.redis.zadd(self.mi_id_key, result)
+            logger.info(f"crawl mi_id {len(result)} {self.redis.zcard(self.mi_id_key)}")
         except Exception as e:
-            print(traceback.format_exc())
             return ""
 
     def _check_body(self, body: str) -> str:
@@ -68,14 +79,14 @@ class MiIdService(object):
         body = self._check_body(body)
 
         flag = "success"
-        mi_id_g = re.search(r"mi_id=(.*?)\"",body)
-        result = mi_id_g.group(1) if mi_id_g else ""
+        mi_id_g = re.findall(r"mi_id=(.*?)\"",body)
+        result = mi_id_g if mi_id_g else []
+        result = {i:int(time.time()) for i in result}
         return flag, result
 
 if __name__ == "__main__":
     service = MiIdService()
     cookie = ""
     params = APIInfo.Params(cookie=cookie, proxies={})
-    body = asyncio.run(service.crawl(params))
-    flag, result = service.check_body(params, body)
-    print(flag, result)
+    asyncio.run(service.crawl(params))
+    print(service.get_mi_id())
