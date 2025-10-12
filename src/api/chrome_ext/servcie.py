@@ -80,20 +80,24 @@ class ChromeExtService(object):
         if not cookie_info:
             return self.api_info.WorkerTaskInfo(flag="not_have_cookie")
         flag, short_url = await self.get_short_url(task_info, cookie_info)
-        self.logger.info(f"prev_task : {user_id} {cookie_info.get('id')} {flag}")
+        self.logger.info(f"prev_task : {user_id} {cookie_info.get('id')} flag:{flag}")
         if flag in ["login"]:
             self.redis.hdel(self.cookie_key, user_id)
-        x5sec = self.redis.hget(self.x5sec_key, cookie_info.get("id"))
-        if x5sec:
-            cookie_info["cookie"] = f"{cookie_info['cookie']};x5sec={x5sec.decode()}"
+            return self.api_info.WorkerTaskInfo(flag="login")
+        elif flag in [""]:
+            return self.api_info.WorkerTaskInfo(flag="empty")
+        else:
+            x5sec = self.redis.hget(self.x5sec_key, cookie_info.get("id"))
+            if x5sec:
+                cookie_info["cookie"] = f"{cookie_info['cookie']};x5sec={x5sec.decode()}"
 
-        return self.api_info.WorkerTaskInfo(
-                task_info=task_info,
-                short_url=short_url,
-                cookie=cookie_info,
-                flag=flag,
-                config=config_dict[task_info.task_type]
-                )
+            return self.api_info.WorkerTaskInfo(
+                    task_info=task_info,
+                    short_url=short_url,
+                    cookie=cookie_info,
+                    flag=flag,
+                    config=config_dict[task_info.task_type]
+                    )
 
     async def get_task(self, worker_info : APIInfo.WorkerInfo) -> Union[APIInfo.WorkerTaskInfo, None]:
         task_id = self.task.get()
