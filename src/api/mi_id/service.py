@@ -53,11 +53,15 @@ class MiIdService(object):
         return url, query_params, headers, cookies, proxies
 
     def get_mi_id(self, add_t : int = 60 * 5) -> str:
-        self.redis.zremrangebyscore(self.mi_id_key, 0, int(time.time())-add_t)
-        mi_id, t = zpop_min(keys=[self.mi_id_key])
-        if mi_id:
-            return mi_id.decode()
-        return ""
+        mi_id = ""
+        try:
+            self.redis.zremrangebyscore(self.mi_id_key, 0, int(time.time())-add_t)
+            mi_id, t = zpop_min(keys=[self.mi_id_key])
+            if mi_id:
+                return mi_id.decode()
+        except Exception as e:
+            logger.error(f"get mi_id error {e}")
+        return mi_id
 
     async def crawl(self, params: APIInfo.Params) -> str:
         url, query_params, headers, cookies, proxies = await self.build_url(params)
