@@ -36,7 +36,7 @@ class ChromeExtService(object):
         if not result:
             self.task.add(task_info.uniq_id)
             result = await self.task.get_result(task_info.uniq_id, task_info.timeout)
-        body, body_info = check_body(result)
+        body, body_info = check_body(result, task_info.task_type)
         logger.info(f"crawl : {body_info} {len(body)}")
         return body, body_info
 
@@ -60,24 +60,22 @@ class ChromeExtService(object):
         return flag, short_url
 
     async def get_one_cookie(self, user_id : int, view_name : str = "", add_t : int = 12) -> Optional[dict]:
-        cookie_info_dict = self.redis.hget(self.cookie_key, user_id)
-        if cookie_info_dict:
-            cookie_info_dict = json.loads(cookie_info_dict)
-            cookie_info = cookie_info_dict.get("cookie")
+        cookie_info = self.redis.hget(self.cookie_key, user_id)
+        if cookie_info:
+            cookie_info = json.loads(cookie_info)
         else:
             cookie_info = await self.cookie_queue.get_one_info(view_name=view_name,add_t=add_t)
             if cookie_info:
-                cookie_info_dict = {"cookie":cookie_info}
-                self.redis.hset(self.cookie_key, user_id, json.dumps(cookie_info_dict))
+                self.redis.hset(self.cookie_key, user_id, json.dumps(cookie_info))
                 cookie_id = cookie_info.get("id")
                 await self.cookie_queue.delete(cookie_id,view_name=view_name)
-        return cookie_info, cookie_info_dict
+        return cookie_info
 
     async def prev_task(self, task_info : APIInfo.TaskInfo, worker_info : APIInfo.WorkerInfo) -> Optional[APIInfo.WorkerTaskInfo]:
         cookie_info, short_url = {}, ""
         user_id = CTX_USER_ID.get()
         # 获取cookie
-        cookie_info, cookie_info_dict = await self.get_one_cookie(user_id,view_name="chrome_ext",add_t=12)
+        cookie_info = await self.get_one_cookie(user_id,view_name="chrome_ext",add_t=12)
         # 获取short_url
         if not cookie_info:
             return self.api_info.WorkerTaskInfo(flag="not_have_cookie")
@@ -85,19 +83,13 @@ class ChromeExtService(object):
         self.logger.info(f"prev_task : {user_id} {cookie_info.get('id')} {flag}")
         if flag in ["login"]:
             self.redis.hdel(self.cookie_key, user_id)
-        print(cookie_info_dict)
-        if cookie_info_dict and cookie_info_dict.get("x5sec"):
-            cookie_info["cookie"] = f"{cookie_info['cookie']};x5sec={cookie_info_dict.get('x5sec')}"
-        #item_url = f"https://item.taobao.com/item.htm?id={task_info.item_id}&mi_id=2Sm--RDgLoff{random.randint(100,999)}iYqoYNoyUzVDCG6Sn{random.randint(100000,990009)}4nkBfUBhpiWRkaHdP_jxY5vAdimu_6derZWZ{random.randint(100000,990009)}Vqa96g"
-        if task_info.task_type == "TAOBAO":
-            mi_id = await get_mi_id()
-            target_url = f"https://item.taobao.com/item.htm?id={task_info.item_id}&mi_id={mi_id}"
-        else:
-            target_url = short_url
+        x5sec = self.redis.hget(self.x5sec_key, cookie_info.get("id"))
+        if x5sec:
+            cookie_info["cookie"] = f"{cookie_info['cookie']};x5sec={x5sec.decode()}"
 
         return self.api_info.WorkerTaskInfo(
                 task_info=task_info,
-                short_url=target_url,
+                short_url=short_url,
                 cookie=cookie_info,
                 flag=flag,
                 config=config_dict[task_info.task_type]
@@ -126,15 +118,14 @@ class ChromeExtService(object):
 
         info = ""
         if item_id in over_task_info.real_url:
-            body, body_info = check_body(over_task_info.result)
+            body, body_info = check_body(over_task_info.result, over_task_info.task_info.task_type)
             match body_info:
                 case "slide":
                     slide_url : str = json.loads(body).get("data",{}).get("url","")
                     x5sec = get_x5sec(slide_url, over_task_info.ua, cookie_dict)
                     if x5sec:
-                        cookie_info_dict = {"cookie":over_task_info.cookie,"x5sec":x5sec}
-                        self.redis.hset(self.cookie_key, user_id, json.dumps(cookie_info_dict))
-                case "success":
+                        self.redis.hset(self.x5sec_key, cookie_id, x5sec)
+                case "success" | "noitem":
                     self.task.over(over_task_info.task_info.uniq_id, body)
                     await account_cost_controller.create(AccountCostCreate(
                         user_id=user_id,

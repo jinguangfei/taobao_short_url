@@ -8,10 +8,10 @@ main_query_fields = ["ttid"]
 TAOBAO_CONFIG = {
         "name": '淘宝详情',
         "type": 'network',
-        "domain": '.com',
-        "url_whitelist": ['mtop.taobao.pcdetail.data.get','item.htm'],
+        "domain": '.',
+        "url_whitelist": ['mtop.taobao.pcdetail.data.get','noitem','item.htm','.hk'],
         "url_blacklist": ["_____tmd_____"],
-        "body_whitelist": ['sku2info','punish?x5secdata','action=deny','pureDenyWait='],
+        "body_whitelist": ['login.htm','sku2info','punish?x5secdata','action=deny','pureDenyWait=','noitem'],
         "body_blacklist": ['FAIL_SYS_TOKEN',],
         "web": True,
         "timeout": 12,
