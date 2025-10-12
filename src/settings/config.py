@@ -54,17 +54,6 @@ class Settings(BaseSettings):
                     }
                 }
             },
-            "mysql_cookie": {
-                "engine": "tortoise.backends.mysql",
-                "credentials": {
-                    "host": "123.56.106.254",
-                    "port": 3306,
-                    "user": "ytadmin",
-                    "password": "zhihaiTECH2015",
-                    "database": "cookie",
-                    "charset": "utf8mb4",
-                }
-            }
         }
         
         return {

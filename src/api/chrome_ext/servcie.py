@@ -110,7 +110,8 @@ class ChromeExtService(object):
         else:
             mi_id = await get_mi_id()
             flag = "not_have_mi_id" if not mi_id else "success"
-        self.logger.info(f"prev_task : {user_id} {cookie_info.get('id')} flag:{flag}")
+        cookie_id = cookie_info.get("id") if cookie_info else ""
+        self.logger.info(f"prev_task user:{user_id} cookie_id:{cookie_id} flag:{flag}")
         if flag in ["not_have_cookie","not_have_mi_id"]:
             return self.api_info.WorkerTaskInfo(flag=flag)
         else:
@@ -137,7 +138,7 @@ class ChromeExtService(object):
         else:
             task_info = self.api_info.TaskInfo.gen_by_uniq_id(task_id)
             worker_task_info = await self.prev_task(task_info, worker_info)
-        self.logger.info(f"get_task user_id:{user_id} task:{worker_task_info.task_info.uniq_id} url:{worker_task_info.short_url}")
+        self.logger.info(f"get_task user_id:{user_id} task:{task_id} url:{worker_task_info.short_url}")
         return worker_task_info
 
     def _parse_cookie_str(self, cookie_str : str) -> dict:
