@@ -23,4 +23,4 @@ for j in range(100):
         i += 1
     except Exception as e:
         print(e)
-    time.sleep(15)
+    time.sleep(1)

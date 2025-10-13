@@ -3,14 +3,16 @@ import requests
 from typing import Dict, Any, Tuple
 import traceback
 from src.loger import logger
+from curl_cffi.requests import AsyncSession
 
-def get_x5sec(slide_url : str, ua : str, cookie : Dict[str,Any], proxies : Dict[str,str]={}, body : str="", **kwargs) -> str:
+async def get_x5sec(slide_url : str, ua : str, cookie : Dict[str,Any], proxies : Dict[str,str]={}, body : str="", **kwargs) -> str:
     x5sec = ""
     for i in range(4):
         try:
             data = {"url":slide_url,"ua":ua,"cookie":cookie,"proxies":proxies,"body":body}
             api_url = "http://123.56.44.124:9478/ali227"
-            res = requests.post(api_url, data=json.dumps(data), timeout=12, headers={'Content-Type': 'application/json'})
+            async with AsyncSession() as session:
+                res = await session.post(api_url, data=json.dumps(data), timeout=12, headers={'Content-Type': 'application/json'})
             print(res.text)
             recv_dict : Dict = json.loads(res.text)
             if recv_dict.get("code")==0:

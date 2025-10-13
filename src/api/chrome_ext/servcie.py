@@ -91,7 +91,7 @@ class ChromeExtService(object):
             flag, short_url = await self.get_short_url(task_info, cookie_info)
         cookie_id = cookie_info.get("id") if cookie_info else ""
         self.logger.info(f"prev_task_short_url user:{user_id} cookie_id:{cookie_id} flag:{flag}")
-        if flag not in ["success"]:
+        if flag not in []:
             if flag in ["login"]:
                 self.redis.hdel(self.cookie_key, user_id)
             self.task.add(task_info.uniq_id)
@@ -176,7 +176,7 @@ class ChromeExtService(object):
             match body_info:
                 case "slide":
                     slide_url : str = json.loads(body).get("data",{}).get("url","")
-                    x5sec = get_x5sec(slide_url, over_task_info.ua, cookie_dict)
+                    x5sec = await get_x5sec(slide_url, over_task_info.ua, cookie_dict)
                     if x5sec:
                         self.redis.hset(self.x5sec_key, cookie_id, x5sec)
                 case "success" | "noitem":
