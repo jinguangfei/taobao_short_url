@@ -37,7 +37,7 @@ def pc_check_body(body : Union[str, None]) -> tuple[str, str]:
     if start>-1:
         end = body.find(',"routePath')
         body = body[start+12:end]
-    deny_flag = body.find("action=deny")>-1 or body.find("pureDenyWait=")> -1
+    deny_flag = body.find("action=deny")>-1 or body.find("pureDenyWait=")> -1  or body.find("deny-h5-tips")>-1
     slide_flag = body.find("punish?x5secdata")>-1
     noitem_flag = body.find("noitem")>-1
     login_flag = body.find("login.jhtml")>-1 or body.find("login.htm")>-1 or body.find(
