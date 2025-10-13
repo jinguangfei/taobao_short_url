@@ -85,20 +85,15 @@ class ChromeExtService(object):
         # 获取cookie
         cookie_info = await self.get_one_cookie(user_id,view_name="chrome_ext",add_t=12)
         # 获取short_url
-        if not cookie_info:
+        if not cookie_info: # 没有cookie
             flag = "not_have_cookie"
         else:
             flag, short_url = await self.get_short_url(task_info, cookie_info)
-            if flag in ["login"]:
-                self.redis.hdel(self.cookie_key, user_id)
-                flag = "login"
-            elif flag in [""]:
-                flag = "empty"
-            else:
-                flag = "success"
         cookie_id = cookie_info.get("id") if cookie_info else ""
         self.logger.info(f"prev_task_short_url user:{user_id} cookie_id:{cookie_id} flag:{flag}")
-        if flag in ["not_have_cookie","empty","login"]:
+        if flag not in ["success"]:
+            if flag in ["login"]:
+                self.redis.hdel(self.cookie_key, user_id)
             self.task.add(task_info.uniq_id)
             return self.api_info.WorkerTaskInfo(flag=flag)
         else:
