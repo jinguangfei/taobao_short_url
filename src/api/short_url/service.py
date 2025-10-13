@@ -1,5 +1,6 @@
 import asyncio
 import re
+import random
 import time
 import json
 import requests
@@ -11,10 +12,13 @@ from .config import APIInfo
 from .utils import get_mi_id
 from ..utils import parse_url, md5_data
 from ..taobao_tk.service import TaobaoTkService
+from src.core.redis_script import redis_pool
+
 
 
 class ShortUrlService(object):
     def __init__(self):
+        self.redis = redis_pool
         self.api_info = APIInfo
         self.taobao_tk_service = TaobaoTkService()
 
@@ -22,7 +26,7 @@ class ShortUrlService(object):
         cookie_dict = {i.split("=")[0]:i.split("=",1)[1] for i in cookie_str.replace("; ",";").split(";") if len(i.split("="))>1}
         return cookie_dict
 
-    async def build_url(self, params: APIInfo.Params):
+    async def build_url(self, params: APIInfo.Params, mi_id: str):
         headers = self.api_info.headers
         _proxies = {
             "http": "http://LVMJTEaf:XW2zzQtS@122.228.200.202:19258",
@@ -32,11 +36,7 @@ class ShortUrlService(object):
         url , query_params = parse_url(self.api_info.url)
         tk_cookie = await self.taobao_tk_service.get_taobao_tk()
         cookies = self.parse_cookie_str(params.cookie+f";{tk_cookie}")
-        if params.targetUrlType == "TAOBAO":
-            mi_id = await get_mi_id()
-            target_url = f"https://item.taobao.com/item.htm?id={params.targetId}&mi_id={mi_id}"
-        else:
-            target_url = params.targetUrl
+        target_url = params.targetUrl + f"&mi_id={mi_id}&spm=a215i.730{random.randint(1000,9999)}.a215i.1.712{random.randint(1000,9999)}8VcU4WQ"
 
         data = {
             "bizCode":"1",
@@ -57,8 +57,9 @@ class ShortUrlService(object):
         return url, query_params, headers, cookies, proxies
 
     async def crawl(self, params: APIInfo.Params) -> str:
-        url, query_params, headers, cookies, proxies = await self.build_url(params)
         try:
+            mi_id = await get_mi_id(cookie=params.cookie, proxies=params.proxies)
+            url, query_params, headers, cookies, proxies = await self.build_url(params, mi_id)
             res = requests.get(url, headers=headers, params=query_params, timeout=10, cookies=cookies, proxies=proxies)
             return res.text
         except Exception as e:
@@ -79,7 +80,7 @@ class ShortUrlService(object):
         long_url = recv_dict.get("data",{}).get("longUrl","")
         unb = self.parse_cookie_str(params.cookie).get("unb") or self.parse_cookie_str(params.cookie).get("munb")
         print(short_url, long_url, unb)
-        if short_url and long_url and unb:
+        if short_url and long_url.find("mi_id")>-1 and unb:
             flag = "success"
             result = APIInfo.ShortInfo(
                 short_url=short_url, 
@@ -98,10 +99,10 @@ class ShortUrlService(object):
 
 if __name__ == "__main__":
     service = ShortUrlService()
-    cookie = "damai_cn_user=0y7YhxL4oOaoCx2IYyA4kUGAAStSdau1qAwSAAPQG4IOvLFhUyR0QLNM6UDtEV80Gxb2%2BRjuqig%3D;user_id=482302508;csg=134c9ba9;damai.cn_nickName=%E9%BA%A6%E5%AD%907o4GQ;isg=BHx8i2j4OMSfqQE9os-uRpuRTRwudSCfXRUvy1b9gWdKIRyrfoOPL8-aBUlZXVj3;tfstk=gQnKjxNzKdBLkp5FpbYMqd4Q_FpMoFDeXXkfq7VhPfhttY9FxWqowzM4s0vEKe--WbGgOy0nE3hi_flnKYD5e8GgAzu3ZWV82YlvIIxDmvkU4kADinYH5oAg0J6CA_q6f8r8d8MKnvHU4uOmEVIHsvlFYPRYVu9Tf8eAAuN7Ode_e5sQFMw51dez1uw7Nut_18wuFgsINA9TU5N7VuG7fdez17Z7VfQDJ5BQBg3Qy72DpTedVgiTpPTiK51TrcyLWSMIBgsWhJULGvN9gMEvGzhLJcxdgJ3sHX2KanSUAz3IlkiJMHEs3VcQBbOAy5gxY0UmvIQ4ODPrMkg91ME7AD30uuLALRmKCmz-YBI_9fksokoX_ghjIxmU70dA17u33lwKWL__Ozsynmmvvxf0M8bpBdQPzywNqWA0jHPP_u2Tipedzaz7QRFDBI_PzywaBSvdSa7z79f..;cookie2=12406d282b4e488263dac6920574fb00;_hvn_login=18;_samesite_flag_=true;_tb_token_=e5eb94635333a;damai.cn_user=0y7YhxL4oOaoCx2IYyA4kUGAAStSdau1qAwSAAPQG4IOvLFhUyR0QLNM6UDtEV80Gxb2+Rjuqig=;damai.cn_user_new=0y7YhxL4oOaoCx2IYyA4kUGAAStSdau1qAwSAAPQG4IOvLFhUyR0QLNM6UDtEV80Gxb2%2BRjuqig%3D;h5token=76db359c6fb845b0b7daf1a9f6b549d7_1_1;loginkey=76db359c6fb845b0b7daf1a9f6b549d7_1_1;munb=2217579428550;sgcookie=E100KLSy5UHTRBbytlfyCO%2FEl0%2FLjWxJg0ryOM7WhU0Gwgl51M6%2BwYRF997ZAFPVeW6fkzV%2Bz69rLGYgvQ%2BHaZ3wRDfjX8JmsF3Tb1a1ND%2B20DQ%3D;t=7e619c559d5c20ee63d3993b16e89ee4;xlly_s=1"
+    cookie = "t=6a51c62dca0a1fed922c837944eb2bee;xlly_s=1;cna=2aVvIVZMuWwCASo6I7UMcTpr;_samesite_flag_=true;cookie2=1c1d90fe4496f8d3dc0266c29afc9906;_tb_token_=3b86de3b316fe;3PcFlag=1760082650101;unb=2220983576244;lgc=tb161721913998;cancelledSubSites=empty;cookie17=UUpjNmpDK7uSQyCYmg%3D%3D;dnk=tb161721913998;tracknick=tb161721913998;_l_g_=Ug%3D%3D;sg=84a;_nk_=tb161721913998;cookie1=VAMR7PH%2BNJ%2FP6uwSaFeK5Wy5XvXZxHcqKvJ%2BySzPwbM%3D;sgcookie=E100qbOHX9oUKdDPAJHOu3tmj7XfFyYF4TBafYSXFRs0QRAlP20ZckJImTGC3sbC02VIYulC%2FnrZn33HUw0CYB7auwoIuqRMGnxmNieV1wJFLwE%3D;havana_lgc2_0=eyJoaWQiOjIyMjA5ODM1NzYyNDQsInNnIjoiZWE3NGUxNjlkMjc2NWEzZDc1NDY5YzE4N2RlMGY4MTAiLCJzaXRlIjowLCJ0b2tlbiI6IjFBX2I1QlNuRkFnVHB0UlN2NjZhcFBBIn0;_hvn_lgc_=0;cookie3_bak=1c1d90fe4496f8d3dc0266c29afc9906;cookie3_bak_exp=1760341863390;sn=;uc3=lg2=Vq8l%2BKCLz3%2F65A%3D%3D&vt3=F8dD2k0%2FEBqMJeaczUk%3D&nk2=F5REODKXK01oxNqCGoI%3D&id2=UUpjNmpDK7uSQyCYmg%3D%3D;csg=d16f054f;env_bak=FM%2BgndCFyBqv0r%2Ffy5GhfapgbppXF95%2BathN4UJtkZz7;skt=23506d729896c2b1;existShop=MTc2MDA4MjY2Mw%3D%3D;uc4=id4=0%40U2gp9rlpS9zkO%2B7Fa1ztLT8XFDnIPJUY&nk4=0%40FY4PamxpPd9soxfRwCyiFZ0UTH0aYncnHw%3D%3D;_cc_=VT5L2FSpdA%3D%3D;havana_lgc_exp=1791186681952;_m_h5_tk=c6f6dc0f73c27159123c624462b9a123_1760093156109;_m_h5_tk_enc=dbb741a5a56befbd32263045d986d979;thw=cn;isg=BAIC_O1T3jVTYMLpx6q1DrVeUwhk0wbtx5lZd0wbTHUgn6AZNmHx_HFcS5vjz36F;sdkSilent=1760111481952;havana_sdkSilent=1760111481952;uc1=cookie14=UoYY4%2Fvpox9c9A%3D%3D&existShop=false&pas=0&cookie15=URm48syIIVrSKA%3D%3D&cookie21=UtASsssmfufd&cookie16=V32FPkk%2FxXMk5UvIbNtImtMfJQ%3D%3D;mtop_partitioned_detect=1;aui=2220983576244;sca=dacdeab7;tfstk=g29mG32jGI5jgKebicXjM8DG7RGJct61MFeOWOQZaa75MmOvXQvGrHofkfGXSQYwPsQ2IhwGbh8scNnjwntfCOuKJFDpcn_BnmeIyOow4OIMVzwaIntfCugKJvHpcl4jcNKVbNolUGjG0OS4304PxayVb-Saz0j1zOWNQFR5ILbP7OWw73olfa7NQOkLQo7eQCJr7WS23HV_1Ljciw2FrR2iXifc8n7lVg9P5sbe0a2Zu2D9oNbWL4hkVQO2kgTiK4X6PC8NjUzrWstwZUjDk241WKtvIgtmgqxlUZxNsE00GZRvr6sPTvqlcKpdOw1obR1OHpCeTdiL63dkzKApn4yw7tQcHKW_jJY1eZ1HH9kQuNdJxdjMCVMk-H9Wrg8EIqSzJ7PESGy1JYx_151VVgbdPCo7btIscHnoqWO1ggshJ0mu151VVgbKq0VOvsS5qjf.."
     params = APIInfo.Params(targetId="834550783063", targetUrlType="LT_TAOBAO", cookie=cookie, proxies={})
-    #body = asyncio.run(service.crawl(params))
-    #print(body)
-    body = '{"api":"mtop.taobao.sharepassword.generateshorturlnew","data":{"shortUrl":"https://e.tb.cn/h.SXjcgDZgiZ8HovB","longUrl":"https://main.m.taobao.com/app/ltao-fe/we-detail/home.html?id=834550783063&un=1dc7d07188ad17b09a94a88b634b6e7e&share_crt_v=1&un_site=18"},"ret":["SUCCESS::调用成功"],"traceId":"213e0a0d17581872240356042e11b2","v":"1.0"}'
-    result = service.check_body(params, body)
-    print(result)
+    body = asyncio.run(service.crawl(params))
+    print(body)
+    #body = '{"api":"mtop.taobao.sharepassword.generateshorturlnew","data":{"shortUrl":"https://e.tb.cn/h.SXjcgDZgiZ8HovB","longUrl":"https://main.m.taobao.com/app/ltao-fe/we-detail/home.html?id=834550783063&un=1dc7d07188ad17b09a94a88b634b6e7e&share_crt_v=1&un_site=18"},"ret":["SUCCESS::调用成功"],"traceId":"213e0a0d17581872240356042e11b2","v":"1.0"}'
+    #result = service.check_body(params, body)
+    #print(result)
