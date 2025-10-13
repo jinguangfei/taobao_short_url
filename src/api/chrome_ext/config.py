@@ -14,7 +14,7 @@ TAOBAO_CONFIG = {
         "body_whitelist": ['login.htm','sku2info','punish?x5secdata','action=deny','pureDenyWait=','noitem'],
         "body_blacklist": ['FAIL_SYS_TOKEN',],
         "web": True,
-        "timeout": 12,
+        "timeout": 8,
         "break_flag": ["login","deny"]
     }
 LT_TAOBAO_CONFIG = {
@@ -26,12 +26,25 @@ LT_TAOBAO_CONFIG = {
         "body_whitelist": [],
         "body_blacklist": ['FAIL_SYS_TOKEN',],
         "web": True,
-        "timeout": 12,
+        "timeout": 8,
+        "break_flag": ["login","deny"]
+    }
+CART_TAOBAO_CONFIG = {
+        "name": '购物车详情',
+        "type": 'fetch',
+        "domain": 'taobao.com',
+        "url_whitelist": ['mtop.taobao.third.pcdetail.data.get'],
+        "url_blacklist": ["_____tmd_____"],
+        "body_whitelist": [],
+        "body_blacklist": ['FAIL_SYS_TOKEN',],
+        "web": True,
+        "timeout": 8,
         "break_flag": ["login","deny"]
     }
 config_dict = {
     "LT_TAOBAO" : LT_TAOBAO_CONFIG,
-    "TAOBAO" : TAOBAO_CONFIG
+    "TAOBAO" : TAOBAO_CONFIG,
+    "CART_TAOBAO" : CART_TAOBAO_CONFIG
 }
 
 
@@ -59,6 +72,7 @@ html_headers = {
 class TaskType(StrEnum):
     TAOBAO = "TAOBAO"
     LT_TAOBAO = "LT_TAOBAO"
+    CART_TAOBAO = "CART_TAOBAO"
 
 
 

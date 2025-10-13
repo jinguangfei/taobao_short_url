@@ -9,3 +9,6 @@ def parse_url(url: str) -> Tuple[str,Dict]:
     url_params = url_params._asdict() # convert to dict 
     url_path = url_params.get("scheme") + "://" + url_params.get("netloc") + url_params.get("path")
     return url_path,query_params
+
+def build_url(url_path: str, query_params: Dict) -> str:
+    return url_path + "?" + "&".join([f"{k}={v}" for k,v in query_params.items()])

@@ -43,12 +43,12 @@ def pc_check_body(body : Union[str, None]) -> tuple[str, str]:
     login_flag = body.find("login.jhtml")>-1 or body.find("login.htm")>-1 or body.find(
 "登录查看更多优惠")>-1
     success_flag = body.count("sku2info") >= 1
-    if success_flag :
+    if login_flag:
+        body_info = "login"
+    elif success_flag :
         body_info = "success"
     elif noitem_flag:
         body_info = "noitem"
-    elif login_flag:
-        body_info = "login"
     elif len(body)<10:
         body_info = "not_have_resources"
     elif deny_flag: 
@@ -62,5 +62,7 @@ def pc_check_body(body : Union[str, None]) -> tuple[str, str]:
 def check_body( body : Union[str, None], task_type : str) -> tuple[str, str]:
     if task_type == "LT_TAOBAO":
         return lt_check_body(body)
+    elif task_type == "CART_TAOBAO":
+        return pc_check_body(body)
     else:
         return pc_check_body(body)
