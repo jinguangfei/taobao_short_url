@@ -84,7 +84,8 @@ class MiIdService(object):
 
         mi_id_g = re.findall(r"mi_id=(.*?)\"",body)
         all_result = mi_id_g if mi_id_g else []
-        result = {i:int(time.time()) for i in all_result if i.find("000")==0}
+        #result = {i:int(time.time()) for i in all_result if i.find("000")==0}
+        result = {i:int(time.time()) for i in all_result}
         return "success", result
 
 if __name__ == "__main__":
