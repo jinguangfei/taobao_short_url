@@ -82,11 +82,10 @@ class MiIdService(object):
     def check_body(self, params: APIInfo.Params, body: str) -> tuple[str, str]:
         body = self._check_body(body)
 
-        flag = "success"
         mi_id_g = re.findall(r"mi_id=(.*?)\"",body)
-        result = mi_id_g if mi_id_g else []
-        result = {i:int(time.time()) for i in result}
-        return flag, result
+        all_result = mi_id_g if mi_id_g else []
+        result = {i:int(time.time()) for i in all_result if i.find("000")==0}
+        return "success", result
 
 if __name__ == "__main__":
     service = MiIdService()
