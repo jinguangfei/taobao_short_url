@@ -8,51 +8,47 @@ import httpx
 from typing import Dict, Union
 
 from .config import APIInfo
-from ..utils import parse_url, md5_data
-from ..taobao_tk.service import TaobaoTkService
-
 from src.core.redis_script import redis_pool,zpop_min
 from src.loger import logger
+from ..base.service import BaseService, APIInfo as BaseAPIInfo
 
 
-class MiIdService(object):
+class MiIdService(BaseService):
     def __init__(self):
+        super().__init__()
         self.redis = redis_pool
-        self.api_info = APIInfo
-        self.taobao_tk_service = TaobaoTkService()
         self.mi_id_key = "mi_id"
 
-    def parse_cookie_str(self, cookie_str : str) -> dict:
-        cookie_dict = {i.split("=")[0]:i.split("=",1)[1] for i in cookie_str.replace("; ",";").split(";") if len(i.split("="))>1}
-        return cookie_dict
-
-    async def build_url(self, params: APIInfo.Params):
-        headers = self.api_info.headers
-        _proxies = {
-            "http": "http://LVMJTEaf:XW2zzQtS@122.228.200.202:19258",
-            "https": "http://LVMJTEaf:XW2zzQtS@122.228.200.202:19258",
-        }
-        proxies = params.proxies or _proxies
-        url , query_params = parse_url(self.api_info.url)
-        tk_cookie = await self.taobao_tk_service.get_taobao_tk()
-        cookies = self.parse_cookie_str(params.cookie+f";{tk_cookie}")
-
+    async def crawl(self, params: APIInfo.Params) -> str:
+        url = APIInfo.url
         data = {
+            "appId":"30986",
+            "params":"{\"pageNum\":0,\"pageSize\":25,\"frontAbId\":\"427503\",\"isFirstPage\":true,\"myCna\":\"\"}"
         }
-        data_str = json.dumps(data).replace(" ", "")
-        data_str = query_params.get("data")
+        params = BaseAPIInfo.Params(url=url, data=data, cookie=params.cookie, proxies=params.proxies)
+        body = await self._crawl(params)
+        return body
 
-        tk_g = re.search(r"_m_h5_tk=(.*?)_",tk_cookie)
-        tk = tk_g.group(1) if tk_g else ""
+    async def crawl_mi_id(self, params: APIInfo.Params) -> str:
+        body = await self.crawl(params)
+        flag, result = self.check_body(params, body)
+        if result:
+            self.redis.zadd(self.mi_id_key, result)
+        logger.info(f"crawl mi_id {len(result)} {self.redis.zcard(self.mi_id_key)}")
+        return result
 
-        t, sign, data_str = md5_data(tk, data_str, app_key="12574478")
-        query_params["data"] = data_str
-        query_params["sign"] = sign
-        query_params["t"] = t
+    async def get_mi_id(self, params: APIInfo.Params) -> str:
+        if params.real_time:
+            result = await self.crawl_mi_id(params)
+            mi_id = result.popitem()[0] if result else ""
+        else:
+            mi_id = self._get_mi_id()
+            if not mi_id:
+                result =await self.crawl_mi_id(params)
+                mi_id = self._get_mi_id()
+        return mi_id
 
-        return url, query_params, headers, cookies, proxies
-
-    def get_mi_id(self, add_t : int = 60 * 5) -> str:
+    def _get_mi_id(self, add_t : int = 60 * 5) -> str:
         mi_id = ""
         try:
             self.redis.zremrangebyscore(self.mi_id_key, 0, int(time.time())-add_t)
@@ -63,28 +59,11 @@ class MiIdService(object):
             logger.error(f"get mi_id error {e}")
         return mi_id
 
-    async def crawl(self, params: APIInfo.Params) -> str:
-        url, query_params, headers, cookies, proxies = await self.build_url(params)
-        try:
-            res = requests.get(url, headers=headers, params=query_params, timeout=10, cookies=cookies, proxies=proxies)
-            flag, result = self.check_body(params, res.text)
-            if result:
-                self.redis.zadd(self.mi_id_key, result)
-            logger.info(f"crawl mi_id {len(result)} {self.redis.zcard(self.mi_id_key)}")
-        except Exception as e:
-            return ""
-
-    def _check_body(self, body: str) -> str:
-        if body.find("mtopjsonp")>-1:
-            body = body[body.find("(")+1:-1].replace("({","{",1)
-        return body
-
     def check_body(self, params: APIInfo.Params, body: str) -> tuple[str, str]:
         body = self._check_body(body)
 
         mi_id_g = re.findall(r"mi_id=(.*?)\"",body)
         all_result = mi_id_g if mi_id_g else []
-        #result = {i:int(time.time()) for i in all_result if i.find("000")==0}
         result = {i:int(time.time()) for i in all_result}
         return "success", result
 
@@ -92,5 +71,6 @@ if __name__ == "__main__":
     service = MiIdService()
     cookie = ""
     params = APIInfo.Params(cookie=cookie, proxies={})
-    asyncio.run(service.crawl(params))
-    print(service.get_mi_id())
+    body = asyncio.run(service.crawl_mi_id(params))
+    mi_id = service.get_mi_id()
+    print(mi_id)

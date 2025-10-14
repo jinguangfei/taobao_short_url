@@ -38,6 +38,8 @@ class APIInfo(object):
         def uniq_id(self) -> str:
             return f"{self.targetId}____{self.targetUrlType}"
 
+    proxy_url = "http://LVMJTEaf:XW2zzQtS@122.228.200.202:19258"
+
     headers = api_headers
     collect_url = "https://h5api.m.tmall.com/h5/mtop.taobao.mercury.addcollect/1.0/?jsv=2.7.4&appKey=12574478&t=1760387152673&sign=c2c39607373f15c935286d4860ecfe9a&api=mtop.taobao.mercury.addCollect&v=1.0&isSec=0&ecode=0&timeout=10000&dataType=json&valueType=string&needEcodeSign=true&LoginRequest=true&needLogin=true&bizName=msoa.taobao.check.collect.h5&sceneName=main_check_collect_h5&type=json&data=%7B%22itemId%22%3A%22744189867030%22%2C%22type%22%3A%221%22%2C%22appName%22%3A%22detailH5%22%7D"
     item_list_url = "https://h5api.m.taobao.com/h5/mtop.taobao.mercury.platform.collections.get/5.1/?jsv=2.7.2&appKey=12574478&t=1760387765317&sign=e7eba8dff129dca382733c108e5b4cdb&api=mtop.taobao.mercury.platform.collections.get&v=5.1&timeout=10000&jsonpIncPrefix=mytbpc&preventFallback=true&type=jsonp&dataType=jsonp&callback=mtopjsonpmytbpc7&data=%7B%22itemType%22%3A1%2C%22platformCode%22%3A0%2C%22appName%22%3A%22favorite%22%2C%22pageSize%22%3A50%2C%22pageNum%22%3A0%2C%22startTime%22%3A%220%22%2C%22weexVersion%22%3A2%7D"
