@@ -63,7 +63,14 @@ class MyQueue(object):
             pass
 
 if __name__ == "__main__":
-    item = MyQueue(queue_name="cookie")
-    print(asyncio.run(item.get_one_info(key=97733,add_t=12,view_name="chrome_ext")))
+    #item = MyQueue(queue_name="cookie")
+    #print(asyncio.run(item.get_one_info(key=97733,add_t=12,view_name="chrome_ext")))
+    item = MyQueue(queue_name="shanchen")
+    recv_dict = asyncio.run(item.get_one_info(add_t=22))
+    proxies = {
+        "http": f"http://{recv_dict.get('proxy_ip')}:{recv_dict.get('proxy_port')}",
+        "https": f"http://{recv_dict.get('proxy_ip')}:{recv_dict.get('proxy_port')}",
+    }
+    print(proxies)
     #asyncio.run(item.wait(key="96689",add_t=100,view_name="chrome_ext"))
     #asyncio.run(item.delete(key="96689",view_name="chrome_ext"))
