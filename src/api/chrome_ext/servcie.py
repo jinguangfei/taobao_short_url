@@ -147,6 +147,7 @@ class ChromeExtService(object):
         # 获取cookie
         cookie_info = await self.get_one_cookie(user_id,view_name="chrome_ext",add_t=12)
         # 获取short_url
+        flag = "success"
         if not cookie_info:
             flag = "not_have_cookie"
         cookie_id = cookie_info.get("id") if cookie_info else ""
@@ -157,13 +158,15 @@ class ChromeExtService(object):
         else:
             if task_info.task_type == "TAOBAO":
                 target_url = self.redis.hget(self.item_url_key, task_info.item_id)
+                target_url = target_url.decode() if target_url else ""
+                target_url = f"https://{target_url}" if not target_url.startswith("http") else target_url
             else:
                 target_url = task_info.base_url.format(item_id=task_info.item_id, mi_id="")
             return self.api_info.WorkerTaskInfo(
                 task_info=task_info,
                 short_url=target_url,
                 cookie=cookie_info,
-                flag="success",
+                flag=flag,
                 config=config_dict[task_info.task_type]
                 )
 
