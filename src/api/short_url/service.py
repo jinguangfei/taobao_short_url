@@ -52,7 +52,7 @@ class ShortUrlService(BaseService):
         body = self._check_body(body)
 
         flag, result = "success", None
-        recv_dict : Dict = json.loads(body)
+        recv_dict : Dict = json.loads(body) if body else {}
         short_url = recv_dict.get("data",{}).get("shortUrl","")
         long_url = recv_dict.get("data",{}).get("longUrl","")
         unb = parse_cookie_str(params.cookie).get("unb") or parse_cookie_str(params.cookie).get("munb")
