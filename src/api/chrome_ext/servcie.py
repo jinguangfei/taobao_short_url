@@ -30,6 +30,7 @@ class ChromeExtService(object):
         self.cookie_queue = MyQueue(queue_name="cookie")
         self.x5sec_key = f"{name}:x5sec"
         self.cookie_key = f"{name}:cookie"
+        self.item_url_key = f"{name}:item_url"
 
     async def crawl(self, task_info : APIInfo.TaskInfo) -> str:
         result = await self.task.get_result(task_info.uniq_id, 1)
@@ -77,6 +78,10 @@ class ChromeExtService(object):
                 tk_dict = parse_cookie_str(tk)
                 cookie_dict.update(tk_dict)
                 cookie_info["cookie"] = ";".join([f"{k}={v}" for k,v in cookie_dict.items()])
+            x5sec = self.redis.hget(self.x5sec_key, cookie_info.get("id"))
+            if x5sec:
+                cookie_info["cookie"] = f"{cookie_info['cookie']};x5sec={x5sec.decode()}"
+
         return cookie_info
 
     async def prev_task_short_url(self, task_info : APIInfo.TaskInfo, worker_info : APIInfo.WorkerInfo) -> Optional[APIInfo.WorkerTaskInfo]:
@@ -97,10 +102,6 @@ class ChromeExtService(object):
             self.task.add(task_info.uniq_id)
             return self.api_info.WorkerTaskInfo(flag=flag)
         else:
-            x5sec = self.redis.hget(self.x5sec_key, cookie_info.get("id"))
-            if x5sec:
-                cookie_info["cookie"] = f"{cookie_info['cookie']};x5sec={x5sec.decode()}"
-
             return self.api_info.WorkerTaskInfo(
                     task_info=task_info,
                     short_url=short_url,
@@ -132,9 +133,6 @@ class ChromeExtService(object):
                 target_url = build_cart_url(task_info.item_id, mi_id, cookie_info.get("cookie",""))
             else:
                 target_url = task_info.base_url.format(item_id=task_info.item_id, mi_id=mi_id)
-            x5sec = self.redis.hget(self.x5sec_key, cookie_info.get("id"))
-            if x5sec:
-                cookie_info["cookie"] = f"{cookie_info['cookie']};x5sec={x5sec.decode()}"
             return self.api_info.WorkerTaskInfo(
                     task_info=task_info,
                     short_url=target_url,
@@ -143,9 +141,37 @@ class ChromeExtService(object):
                     config=config_dict[task_info.task_type]
                     )
 
+    async def prev_task_item_url(self, task_info : APIInfo.TaskInfo, worker_info : APIInfo.WorkerInfo) -> Optional[APIInfo.WorkerTaskInfo]:
+        cookie_info = {}
+        user_id = CTX_USER_ID.get()
+        # 获取cookie
+        cookie_info = await self.get_one_cookie(user_id,view_name="chrome_ext",add_t=12)
+        # 获取short_url
+        if not cookie_info:
+            flag = "not_have_cookie"
+        cookie_id = cookie_info.get("id") if cookie_info else ""
+        self.logger.info(f"prev_task user:{user_id} cookie_id:{cookie_id} flag:{flag}")
+        if flag in ["not_have_cookie"]:
+            self.task.add(task_info.uniq_id)
+            return self.api_info.WorkerTaskInfo(flag=flag)
+        else:
+            if task_info.task_type == "TAOBAO":
+                target_url = self.redis.hget(self.item_url_key, task_info.item_id)
+            else:
+                target_url = task_info.base_url.format(item_id=task_info.item_id, mi_id="")
+            return self.api_info.WorkerTaskInfo(
+                task_info=task_info,
+                short_url=target_url,
+                cookie=cookie_info,
+                flag="success",
+                config=config_dict[task_info.task_type]
+                )
+
+
     async def prev_task(self, task_info : APIInfo.TaskInfo, worker_info : APIInfo.WorkerInfo) -> Optional[APIInfo.WorkerTaskInfo]:
         #return await self.prev_task_mi_id(task_info, worker_info)
-        return await self.prev_task_short_url(task_info, worker_info)
+        #return await self.prev_task_short_url(task_info, worker_info)
+        return await self.prev_task_item_url(task_info, worker_info)
 
     async def get_task(self, worker_info : APIInfo.WorkerInfo) -> Union[APIInfo.WorkerTaskInfo, None]:
         task_id = self.task.get()
@@ -158,14 +184,10 @@ class ChromeExtService(object):
         self.logger.info(f"get_task user_id:{user_id} task:{task_id} url:{worker_task_info.short_url}")
         return worker_task_info
 
-    def _parse_cookie_str(self, cookie_str : str) -> dict:
-        cookie_dict = {i.split("=")[0]:i.split("=",1)[1] for i in cookie_str.replace("; ",";").split(";") if len(i.split("="))>1}
-        return cookie_dict
-
     async def over_task(self, over_task_info : APIInfo.OverTaskInfo) -> tuple[str, str]:
         item_id = over_task_info.task_info.item_id
         cookie_str = over_task_info.cookie.get("cookie")
-        cookie_dict = self._parse_cookie_str(cookie_str)
+        cookie_dict = parse_cookie_str(cookie_str)
         cookie_id = over_task_info.cookie.get("id")
         user_id = CTX_USER_ID.get()
         task_info = over_task_info.task_info
@@ -188,6 +210,7 @@ class ChromeExtService(object):
                         cost_type=CostType.CREDIT,
                         remark=f"{user_id} {cookie_id} {over_task_info.task_info.uniq_id}"
                     ))
+                    await self.cookie_queue.update_flag(cookie_id, 1, view_name="chrome_ext")
                 case "deny":
                     self.redis.hdel(self.cookie_key, user_id)
                 case "login":
