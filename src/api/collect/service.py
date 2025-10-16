@@ -112,7 +112,7 @@ if __name__ == "__main__":
     print(len(item_id_list))
     item_id_list = [i for i in item_id_list if i not in have_id_list]
     print(len(item_id_list))
-    for i in range(10):
+    for i in range(1):
         for item_id in item_id_list[20*i:20*(i+1)]:
             params = APIInfo.Params(targetId=item_id, cookie=cookie, proxies={})
             res = asyncio.run(service.collect_url(params))
