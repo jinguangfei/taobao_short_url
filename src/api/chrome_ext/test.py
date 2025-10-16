@@ -8,11 +8,13 @@ url_redis_key = "chrome_ext:item_url"
 
 # 8秒一次
 import time
-with open("src/tmp/20251015_item_url", "r") as f:
+with open("src/tmp/20251016_all_miid", "r") as f:
     item_id_list = f.read().splitlines()
     #item_id_list = [item_id.split(" ")[0] for item_id in item_id_list][100:]
     item_id_dict = {item_id.split(" ")[0]:item_id.split(" ")[1] for item_id in item_id_list}
+    redis_pool.delete(url_redis_key)
     redis_pool.hmset(url_redis_key, item_id_dict)
+    print("over")
 time.sleep(10000)
 i = 0
 r_type = sys.argv[1]
