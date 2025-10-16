@@ -91,7 +91,7 @@ class CollectService(object):
 
         recv_dict : Dict = json.loads(body)
         item_list = recv_dict.get("data",{}).get("favList",[])
-        result = [i.get("favId")+" "+i.get("itemUrl") for i in item_list]
+        result = [i.get("favId")+" "+i.get("itemUrl").replace("//","") for i in item_list]
         return flag, result
 
 if __name__ == "__main__":
@@ -105,6 +105,7 @@ if __name__ == "__main__":
     flag, result = service.check_item_list_body(params=params,body=res.text)
     with open("src/tmp/t4","a") as f:
         f.write("\n".join(result)+"\n")
+    time.sleep(10000)
     with open("src/tmp/t4","r") as f:
         have_list = f.readlines()
         have_list = [i.strip() for i in have_list]
