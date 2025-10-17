@@ -18,6 +18,7 @@ class BaseService(object):
 
     def build_url_prev(self, params: APIInfo.Params):
         headers = APIInfo.headers
+        headers.update(params.headers)
         _proxies = {
             "http": APIInfo.proxy_url,
             "https": APIInfo.proxy_url,

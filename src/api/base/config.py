@@ -14,7 +14,8 @@ api_headers = {
     'sec-fetch-mode': 'no-cors',
     'sec-fetch-site': 'same-site',
     #bzip
-    "Accept-Encoding": "gzip, deflate, br"
+    "Accept-Encoding": "gzip, deflate, br",
+    "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
 }
 user_agent_list = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
@@ -34,6 +35,7 @@ class APIInfo(object):
         data : Dict
         cookie : Optional[str] = ""
         proxies : Optional[Dict] = {}
+        headers : Optional[Dict] = {}
 
     proxy_url = "http://LVMJTEaf:XW2zzQtS@122.228.200.202:19258"
     headers = api_headers
