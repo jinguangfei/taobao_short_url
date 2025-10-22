@@ -39,10 +39,13 @@ async def list_resource(
     name: str = Query(None, description="资源名称"),
     page: int = Query(1, description="页码"),
     page_size: int = Query(100, description="每页数量"),
+    status: int = Query(None, description="状态"),
 ):
     q = Q()
     if name:
         q &= Q(name=name)
+    if status:
+        q &= Q(status=status)
     
     total, resources = await source_controller.list(page=page, page_size=page_size, search=q)
     data = [await obj.to_dict() for obj in resources]
