@@ -11,10 +11,9 @@ from .service import MiIdService, APIInfo
 service = MiIdService()
 
 router = APIRouter()
-@router.post("/", summary="获取mi_id",response_class=PlainTextResponse)
+@router.post("/", summary="获取mi_id item_url",response_class=PlainTextResponse)
 async def current(
     params: APIInfo.Params = Body(..., description="参数"),
 ):
     mi_id = await service.get_mi_id(params)
-    logger.info(f"crawl mi_id {mi_id}")
-    return json.dumps({"flag":"success","result":mi_id},ensure_ascii=False)
+    return mi_id

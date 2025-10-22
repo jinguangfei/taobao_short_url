@@ -37,5 +37,5 @@ class APIInfo(object):
         proxies : Optional[Dict] = {}
         headers : Optional[Dict] = {}
 
-    proxy_url = "http://LVMJTEaf:XW2zzQtS@122.228.200.202:19258"
+    proxy_url = "http://i4B9mhnE:tNa2Tngn@122.228.200.202:19280"
     headers = api_headers

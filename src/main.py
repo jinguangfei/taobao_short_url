@@ -1,24 +1,43 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from tortoise import Tortoise
+
+from src.core.exceptions import SettingNotFound
+from src.core.init_app import (
+    init_data,
+    make_middlewares,
+    register_exceptions,
+    register_routers,
+)
+
+try:
+    from src.settings.config import settings
+except ImportError:
+    raise SettingNotFound("Can not import settings")
 
 
-import sys
-import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Query, Path
-from fastapi.staticfiles import StaticFiles
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_data()
+    yield
+    await Tortoise.close_connections()
 
-from starlette.middleware.gzip import GZipMiddleware
-app =  FastAPI()
+
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title=settings.APP_TITLE,
+        description=settings.APP_DESCRIPTION,
+        version=settings.VERSION,
+        openapi_url="/openapi.json",
+        middleware=make_middlewares(),
+        lifespan=lifespan,
+    )
+    register_exceptions(app)
+    register_routers(app, api_router, prefix="")
+    return app
+
 
 from src.api.router import router as api_router
-from src.core.middlewares import BackGroundTaskMiddleware
 
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-app.add_middleware(BackGroundTaskMiddleware)
-app.include_router(api_router)
-
-
-
-if __name__ == "__main__":
-    host = sys.argv[1]
-    port = int(sys.argv[2])
-    uvicorn.run(app, host=host, port=port)
-    pass
+app = create_app()

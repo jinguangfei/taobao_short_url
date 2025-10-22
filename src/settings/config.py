@@ -40,24 +40,24 @@ class Settings(BaseSettings):
     @property
     def TORTOISE_ORM(self) -> dict:
         connections = {
-            #"sqlite": {
-            #    "engine": "tortoise.backends.sqlite",
-            #    "credentials": {"file_path": f"{self.BASE_DIR}/db.sqlite3"},
-            #}
-            "postgres": {
-                "engine": "tortoise.backends.asyncpg",
-                "credentials": {
-                    "host": "localhost",
-                    "port": 5432,
-                    "user": "dcx",
-                    "password": "123456",
-                    "database": "dcx_admin",
-                    "server_settings": {
-                        "timezone": "Asia/Shanghai",
-                        "TimeZone": "Asia/Shanghai"
-                    }
-                }
+            "sqlite": {
+                "engine": "tortoise.backends.sqlite",
+                "credentials": {"file_path": f"{self.BASE_DIR}/db.sqlite3"},
             }
+            #"postgres": {
+            #    "engine": "tortoise.backends.asyncpg",
+            #    "credentials": {
+            #        "host": "localhost",
+            #        "port": 5432,
+            #        "user": "dcx",
+            #        "password": "123456",
+            #        "database": "dcx_admin",
+            #        "server_settings": {
+            #            "timezone": "Asia/Shanghai",
+            #            "TimeZone": "Asia/Shanghai"
+            #        }
+            #    }
+            #}
         }
         
         return {
@@ -65,16 +65,10 @@ class Settings(BaseSettings):
             "apps": {
                 "models": {
                     "models": [
-                        "src.admin.models", 
-                        "src.account.info.models",
-                        "src.account.cost.models",
-                        "src.gateway.sync.base.models",
-                        "src.gateway.sync.user.models",
-                        "src.gateway.sync.call.models",
-                        "src.gateway.async_.base.models",
+                        "src.api.source.models",
                         "aerich.models"
                     ],
-                    "default_connection": "postgres",
+                    "default_connection": "sqlite",
                 },
             },
             "use_tz": False,
