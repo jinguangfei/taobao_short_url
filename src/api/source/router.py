@@ -44,7 +44,7 @@ async def list_resource(
     q = Q()
     if name:
         q &= Q(name=name)
-    if status:
+    if status is not None:
         q &= Q(status=status)
     
     total, resources = await source_controller.list(page=page, page_size=page_size, search=q)
