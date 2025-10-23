@@ -1,5 +1,5 @@
 import asyncio
-from locale import currency
+import traceback
 from curl_cffi.requests import AsyncSession
 from curl_cffi.requests.models import Response
 from typing import Dict, Tuple
@@ -53,6 +53,7 @@ class XianyuReloginService(object):
         
         # 原始Cookie字符串
         
+        print(exclude_cookies)
         # 过滤Cookie
         cookies = self.get_cookies(cookie_str, exclude_cookies)
         unb = cookies.get("unb")
@@ -83,13 +84,16 @@ class XianyuReloginService(object):
         }
         flag = ReloginFlag.FAIL
         try:
+            print(proxies)
             async with AsyncSession() as session:
                 response = await session.post(url, headers=headers, data=data, cookies=cookies, proxies=proxies, timeout=timeout)
             new_cookies = self.parse_set_cookies(response)
+            print(new_cookies)
             cookies.update(new_cookies)
             cookies.update({"_rt":f"{int(time.time())}"})
             cookie_str = "; ".join([f"{k}={v}" for k,v in cookies.items()])
             flag = ReloginFlag.SUCCESS if check_flag(cookies) else ReloginFlag.FAIL
+
             status = 1 if flag == ReloginFlag.SUCCESS else 0
             cur_t = int(time.time())
             await source_controller.update_or_create(
@@ -104,7 +108,7 @@ class XianyuReloginService(object):
             )
             logger.info(f"unb {unb} relogin {flag.value}")
         except Exception as e:
-            logger.error(f"relogin error: {e}")
+            logger.error(f"relogin error: {traceback.format_exc()}")
             flag = ReloginFlag.TIMEOUT
         return flag, cookies
 

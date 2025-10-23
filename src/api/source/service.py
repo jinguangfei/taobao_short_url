@@ -6,6 +6,7 @@ from typing import Any, Dict, Generic, List, NewType, Tuple, Type, TypeVar, Unio
 
 from tortoise.transactions import in_transaction
 from src.core.crud import CRUDBase
+from src.core.redis_script import redis_pool
 
 from .models import Source
 from .schemas import SourceCreate, SourceUpdate
@@ -13,6 +14,8 @@ from .schemas import SourceCreate, SourceUpdate
 class SourceController(CRUDBase[Source, SourceCreate, SourceUpdate]):
     def __init__(self):
         super().__init__(model=Source)
+        self.redis = redis_pool
+        self.redis_key = "source:flag"
 
     async def get_available_resource(self, name: str, add_t: int = 6, expire_time: int = 60*60*24) -> Source:
         """
@@ -34,6 +37,8 @@ class SourceController(CRUDBase[Source, SourceCreate, SourceUpdate]):
                 resource.use_t = cur_t + add_t
                 await resource.save()
                 return resource
+            else:
+                self.redis.hset(self.redis_key, name, cur_t)
         
         return None
 

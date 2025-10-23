@@ -40,13 +40,17 @@ async def list_resource(
     page: int = Query(1, description="页码"),
     page_size: int = Query(100, description="每页数量"),
     status: int = Query(None, description="状态"),
+    expire_time: int = Query(None, description="过期时间"),
+    order: list = Query([], description="排序"),
 ):
     q = Q()
     if name:
         q &= Q(name=name)
     if status is not None:
         q &= Q(status=status)
+    if expire_time is not None:
+        q &= Q(init_t__lt=int(time.time()) - expire_time)
     
-    total, resources = await source_controller.list(page=page, page_size=page_size, search=q)
+    total, resources = await source_controller.list(page=page, page_size=page_size, search=q, order=order)
     data = [await obj.to_dict() for obj in resources]
     return SuccessExtra(data=data, total=total, page=page, page_size=page_size)
