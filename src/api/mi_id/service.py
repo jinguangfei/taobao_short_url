@@ -1,3 +1,4 @@
+import urllib
 import asyncio
 import re
 import time
@@ -14,6 +15,7 @@ from .config import APIInfo
 from src.core.redis_script import redis_pool,zpop_min
 from src.loger import logger
 from ..base.service import BaseService, APIInfo as BaseAPIInfo
+from src.api.utils.taobao_req import parse_url
 
 
 class MiIdService(BaseService):
@@ -62,11 +64,24 @@ class MiIdService(BaseService):
     async def get_mi_id(self, params: APIInfo.Params) -> str:
         item_url = self.redis.hget(self.mi_id_key, params.item_id)
         if item_url:
-            return item_url
+            pass
         else:
             await self.crawl_mi_id(params)
             item_url = self.redis.hget(self.mi_id_key, params.item_id)
+        item_url = item_url.decode("utf-8") if isinstance(item_url, bytes) else item_url
+        item_url = self.parse_mi_id(item_url)
         return item_url
+
+    def parse_mi_id(self, mi_id: str) -> str:
+        if mi_id and mi_id.find("utparam=null") > -1:
+            url, query_params = parse_url(mi_id)
+            item_id = query_params.get("id")
+            scm = query_params.get("scm")
+            pvid = str(uuid.uuid4())
+            utparam = '{"floorId":42001303,"recIndex":5,"x_object_type":"item","pvid":"%s","x_item_ids":%s,"scm":"%s","x_object_id":%s,"tpp_buckets":"302#0#273555#0_30636#0#273555#0"}' % (pvid,item_id,scm,item_id)
+            query_params["utparam"] = utparam
+            mi_id = url + "?" + urllib.parse.urlencode(query_params)
+        return mi_id.replace("://","") if mi_id else ""
 
     def _check_body(self, body: str) -> Dict[str, str]:
         item_url_list = re.findall(r'itemUrl":"//(.*?)"',body)
@@ -102,7 +117,8 @@ class MiIdService(BaseService):
 
 if __name__ == "__main__":
     service = MiIdService()
-    params = APIInfo.Params(item_id="7172789640",proxies={})
+    params = APIInfo.Params(item_id="593147834457",proxies={})
     #body = asyncio.run(service.crawl_mi_id(params))
     #service.chouqu_mi_id("src/tmp/all_itemurl")
     #print(service.redis.hlen(service.mi_id_key))
+    print(asyncio.run(service.get_mi_id(params)))

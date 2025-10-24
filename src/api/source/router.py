@@ -54,3 +54,13 @@ async def list_resource(
     total, resources = await source_controller.list(page=page, page_size=page_size, search=q, order=order)
     data = [await obj.to_dict() for obj in resources]
     return SuccessExtra(data=data, total=total, page=page, page_size=page_size)
+
+@router.delete("/", summary="删除资源")
+async def delete_resource(
+    name: str = Query(..., description="资源名称"),
+):
+    q = Q(name=name)
+    await source_controller.model.filter(q).delete()
+    return Success(
+        data=None
+    )
