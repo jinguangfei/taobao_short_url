@@ -36,6 +36,7 @@ async def get_available_resource(
 
 @router.get("/list", summary="查看资源")
 async def list_resource(
+    id: int = Query(None, description="ID"),
     name: str = Query(None, description="资源名称"),
     page: int = Query(1, description="页码"),
     page_size: int = Query(100, description="每页数量"),
@@ -44,6 +45,8 @@ async def list_resource(
     order: list = Query([], description="排序"),
 ):
     q = Q()
+    if id is not None:
+        q &= Q(id=id)
     if name:
         q &= Q(name=name)
     if status is not None:
@@ -61,6 +64,27 @@ async def delete_resource(
 ):
     q = Q(name=name)
     await source_controller.model.filter(q).delete()
+    return Success(
+        data=None
+    )
+
+@router.post("/wait", summary="等待资源")
+async def wait_resource(
+    id: int = Query(..., description="ID"),
+    add_t : int = Query(..., description="添加时间"),
+):
+    cur_t = int(time.time())
+    await source_controller.model.filter(id=id).update(add_t=cur_t + add_t)
+    return Success(
+        data=None
+    )
+
+@router.post("/status", summary="更新资源status")
+async def update_resource_status(
+    id: int = Query(..., description="ID"),
+    status: int = Query(..., description="状态"),
+):
+    await source_controller.model.filter(id=id).update(status=status)
     return Success(
         data=None
     )

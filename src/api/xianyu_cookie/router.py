@@ -16,9 +16,10 @@ router = APIRouter()
 async def relogin(
     params: APIInfo.Params = Body(..., description="参数"),
 ):
-    flag, cookies = await service.get_new_cookies(params.cookie_str, proxies=params.proxies)
+    flag, cookies, cookies_str = await service.get_new_cookies(params.cookie_str, proxies=params.proxies)
     return Success(
         data={
             "flag":flag.value,
+            "cookies": cookies_str,
         }
     )

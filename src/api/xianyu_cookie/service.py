@@ -87,15 +87,15 @@ class XianyuReloginService(object):
             'bx-ua': ''
         }
         flag = ReloginFlag.FAIL
+        cookies_str = cookie_str
         try:
             print(proxies)
             async with AsyncSession() as session:
                 response = await session.post(setting_url, headers=headers, data=setting_data, cookies=cookies, proxies=proxies, timeout=timeout)
                 new_cookies = self.parse_set_cookies(response)
-                print(new_cookies)
+                cookies.update(new_cookies)
                 response = await session.post(url, headers=headers, data=data, cookies=cookies, proxies=proxies, timeout=timeout)
                 new_cookies = self.parse_set_cookies(response)
-                print(new_cookies)
                 cookies.update(new_cookies)
             cookies.update({"_rt":f"{int(time.time())}"})
             cookie_str = "; ".join([f"{k}={v}" for k,v in cookies.items()])
@@ -117,7 +117,7 @@ class XianyuReloginService(object):
         except Exception as e:
             logger.error(f"relogin error: {traceback.format_exc()}")
             flag = ReloginFlag.TIMEOUT
-        return flag, cookies
+        return flag, cookies, cookies_str
 
 if __name__ == "__main__":
     service = XianyuReloginService()
