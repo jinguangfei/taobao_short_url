@@ -1,3 +1,4 @@
+import sys
 import asyncio
 import time
 from tortoise.expressions import Q
@@ -26,9 +27,9 @@ class XianyuCookieService(object):
         self.redis = redis_pool
         self.redis_key = "source:flag"
 
-    async def get_first_need(self) -> dict:
+    async def get_first_need(self, status: int = 1) -> dict:
         cur_t = int(time.time())
-        url = "http://127.0.0.1:8000/api/source/list?name=xianyu_cookie&status=1&expire_time=60&&order=init_t"
+        url = f"http://123.56.44.124:9460/api/source/list?name=xianyu_cookie&status={status}&expire_time=60&&order=init_t"
         async with AsyncSession() as session:
             response = await session.get(url)
             recv_dict =response.json()
@@ -38,7 +39,7 @@ class XianyuCookieService(object):
         return None
 
     async def get_new_cookies(self, cookie: str) -> str:
-        url = "http://127.0.0.1:8000/api/xianyu_cookie/relogin"
+        url = "http://123.56.44.124:9460/api/xianyu_cookie/relogin"
         proxies = await get_proxies()
         data = {
             "cookie_str": cookie,
@@ -59,6 +60,15 @@ class XianyuCookieService(object):
                     await self.get_new_cookies(cookie)
             await asyncio.sleep(1)
 
+    async def check_cookie(self):
+        source = await self.get_first_need(status=3)
+        if source:
+            cookie = source["value"]
+            await self.get_new_cookies(cookie)
+
 if __name__ == "__main__":
     service = XianyuCookieService()
-    asyncio.run(service.run())
+    if len(sys.argv) > 1 and sys.argv[1] == "check":
+        asyncio.run(service.check_cookie())
+    else:
+        asyncio.run(service.run())

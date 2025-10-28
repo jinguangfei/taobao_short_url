@@ -7,7 +7,7 @@ from tortoise.expressions import Q
 
 from src.loger import logger
 from src.core.schemas import SuccessExtra, Fail, Success
-from .service import source_controller
+from .service import source_controller, SourceCreate
 
 router = APIRouter()
 
@@ -87,4 +87,14 @@ async def update_resource_status(
     await source_controller.model.filter(id=id).update(status=status)
     return Success(
         data=None
+    )
+
+@router.post("/create", summary="创建资源")
+async def create_resource(
+    source_create: SourceCreate = Body(..., description="资源创建"),
+):
+    source = await source_controller.create(source_create)
+    data = await source.to_dict()
+    return Success(
+        data=data
     )
