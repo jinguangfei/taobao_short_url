@@ -1,0 +1,50 @@
+from pydantic import BaseModel, Field
+from typing import List, Dict, Optional
+
+class ExtFunctionCreate(BaseModel):
+    name: str = Field(max_length=64, description="功能名称")
+    type: str = Field(max_length=64, description="功能类型")
+    domain: str = Field(max_length=128, description="域名")
+    url_whitelist: List[str] = Field(default=[], description="URL白名单")
+    url_blacklist: List[str] = Field(default=[], description="URL黑名单")
+    body_whitelist: List[str] = Field(default=[], description="Body白名单")
+    body_blacklist: List[str] = Field(default=[], description="Body黑名单")
+    remove_selectors: List[str] = Field(default=[], description="移除选择器")
+    function: List[str] = Field(default=["crawl"], description="功能")
+    timeout: int = Field(default=10, description="超时时间")
+    break_flag: List[str] = Field(default=[], description="中断标志")
+    url_template: Optional[str] = Field(None, max_length=256, description="URL模板")
+    main_params: List[str] = Field(default=[], description="主参数")
+
+class ExtFunctionUpdate(BaseModel):
+    id: int = Field(description="ID")
+    name: Optional[str] = Field(None, max_length=64, description="功能名称")
+    type: Optional[str] = Field(None, max_length=64, description="功能类型")
+    domain: Optional[str] = Field(None, max_length=128, description="域名")
+    url_whitelist: Optional[List[str]] = Field(None, description="URL白名单")
+    url_blacklist: Optional[List[str]] = Field(None, description="URL黑名单")
+    body_whitelist: Optional[List[str]] = Field(None, description="Body白名单")
+    body_blacklist: Optional[List[str]] = Field(None, description="Body黑名单")
+    remove_selectors: Optional[List[str]] = Field(None, description="移除选择器")
+    function: Optional[List[str]] = Field(None, description="功能")
+    timeout: Optional[int] = Field(None, description="超时时间")
+    break_flag: Optional[List[str]] = Field(None, description="中断标志")
+    url_template: Optional[str] = Field(None, max_length=256, description="URL模板")
+    main_params: Optional[List[str]] = Field(None, description="主参数")
+
+
+class ExtFunctionOut(BaseModel):
+    id: int = Field(description="ID")
+    name: str = Field(max_length=64, description="功能名称")
+    type: str = Field(max_length=64, description="功能类型")
+    domain: str = Field(max_length=128, description="域名")
+    url_whitelist: List[str] = Field(default=[], description="URL白名单")
+    url_blacklist: List[str] = Field(default=[], description="URL黑名单")
+    body_whitelist: List[str] = Field(default=[], description="Body白名单")
+    body_blacklist: List[str] = Field(default=[], description="Body黑名单")
+    remove_selectors: List[str] = Field(default=[], description="移除选择器")
+    function: List[str] = Field(default=[], description="功能")
+    timeout: int = Field(default=10, description="超时时间")
+    break_flag: List[str] = Field(default=[], description="中断标志")
+    url_template: Optional[str] = Field(None, max_length=256, description="URL模板")
+    main_params: List[str] = Field(default=[], description="主参数")

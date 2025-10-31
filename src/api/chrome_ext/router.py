@@ -23,7 +23,6 @@ async def item(
     timeout: int = Query(10, description="超时时间"),
     task_type: TaskType = Query(TaskType.LT_TAOBAO, description="任务类型"),
     batch: str = Query(None, description="日期"),
-    
 ):
     if batch:
         task_info = chrome_ext_service.api_info.TaskInfo(item_id=item_id, timeout=timeout, task_type=task_type, batch=batch)

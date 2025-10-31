@@ -49,3 +49,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def remove(self, id: int) -> None:
         obj = await self.get(id=id)
         await obj.delete()
+
+        
+    async def update_or_create(self, defaults: Dict[str, Any], **kwargs) -> Tuple[ModelType, bool]:
+        """ 
+        更新或创建对象
+        :param defaults: 要更新/创建的字段值
+        :param kwargs: 用于查询的条件
+        :return: (对象, 是否创建) - created=True 表示新创建，False 表示更新
+        """
+        obj, created = await self.model.update_or_create(defaults=defaults, **kwargs)
+        return obj, created
