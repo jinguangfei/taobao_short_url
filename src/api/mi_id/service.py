@@ -21,7 +21,7 @@ from src.api.utils.taobao_req import parse_url
 class MiIdService(BaseService):
     def __init__(self):
         self.redis = redis_pool
-        self.mi_id_key = "source:mi_id"
+        self.mi_id_key = "source:mi_id:haier_sale"
 
     @staticmethod
     def parse_miid(url: str) -> Union[str, None]:
@@ -119,6 +119,6 @@ if __name__ == "__main__":
     service = MiIdService()
     params = APIInfo.Params(item_id="593147834457",proxies={})
     #body = asyncio.run(service.crawl_mi_id(params))
-    #service.chouqu_mi_id("src/tmp/all_itemurl")
-    #print(service.redis.hlen(service.mi_id_key))
-    print(asyncio.run(service.get_mi_id(params)))
+    service.chouqu_mi_id("20251030_xmz2_sale")
+    print(service.redis.hlen(service.mi_id_key))
+    #print(asyncio.run(service.get_mi_id(params)))

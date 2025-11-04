@@ -1,17 +1,25 @@
 import json
 from datetime import datetime
-from typing import Dict, Any
-from fastapi import APIRouter, Query, HTTPException, Body
+from typing import Dict, Any, Literal
+from fastapi import APIRouter, Query, HTTPException, Body, Path
 from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
 
+from src.core.schemas import Success, Fail
+from src.loger import logger
 
-from .service import DamaiCookieService
-service = DamaiCookieService()
-
-CONST_KEY = "short_url"
+from .service import XianyuReloginService, APIInfo
+service = XianyuReloginService()
 
 router = APIRouter()
-@router.get("/", summary="获取大麦cookie",response_class=PlainTextResponse)
-async def current(
+@router.post("/relogin", summary="闲鱼重新登录",response_class=PlainTextResponse)
+async def relogin(
+    params: APIInfo.Params = Body(..., description="参数"),
 ):
-    return await service.get_cookie()
+    flag, cookies, cookies_str = await service.get_new_cookies(params.cookie_str, proxies=params.proxies)
+    return Success(
+        data={
+            "flag":flag.value,
+            "cookies": cookies_str,
+        }
+    )
