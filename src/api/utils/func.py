@@ -23,9 +23,9 @@ def build_url(url_path: str, query_params: Dict) -> str:
     query_params_str = urllib.parse.urlencode(query_params, doseq=True)
     return url_path + "?" + query_params_str
 
-def parse_cookie_str(cookie_str : str, exclude_cookies : List[str] = []) -> Dict[str, str]:
+def parse_cookie_str(cookie_str : str, exclude_cookies : List[str] = [], filed_seq : str = ";", name_seq : str = "=") -> Dict[str, str]:
     cookie_str = cookie_str.strip().replace(' ', '')
-    cookies = {i.split("=")[0]:i.split("=",1)[1] for i in cookie_str.split(";") if len(i.split("="))>1}
+    cookies = {i.split(name_seq)[0]:i.split(name_seq,1)[1] for i in cookie_str.split(filed_seq) if len(i.split(name_seq))>1}
     for k in exclude_cookies:
         cookies.pop(k, None)
     return cookies
@@ -41,7 +41,6 @@ def parse_set_cookies(response: Response) -> Dict[str, str]:
 
 async def get_proxies(queue : MyQueue = shanchen_queue) -> dict:
     recv_dict = await queue.get_one_info(add_t=20)
-    print(recv_dict)
     if not recv_dict:
         return None
     else:       

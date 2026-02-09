@@ -9,6 +9,7 @@ class SourceCreate(BaseModel):
     value: str = Field(..., description="value")
     init_t: int = Field(default_factory=lambda: int(time.time()), description="初始化时间戳")
     use_t: int = Field(default=0, description="使用时间戳")
+    status: int = Field(default=1, description="状态")
 
 class SourceUpdate(BaseModel):
     use_t: int = Field(default_factory=lambda: int(time.time()), description="使用时间戳")

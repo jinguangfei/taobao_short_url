@@ -9,7 +9,8 @@ from typing import Dict, Union
 
 from .config import APIInfo
 from ..taobao_tk.service import tk_service
-from src.api.utils.taobao_req import crawl, parse_cookie_str
+from src.api.utils.taobao_req import crawl
+from src.api.utils.func import parse_cookie_str
 
 
 class BaseService(object):

@@ -16,7 +16,7 @@ async def test(cookie):
 
 if __name__ == "__main__":
     cookie_list = [] 
-    with open("xy_cookie_20251103", "r") as f:
+    with open("t1", "r") as f:
         cookie_list = f.readlines()
         cookie_list = [cookie.strip() for cookie in cookie_list]
     for cookie in cookie_list:

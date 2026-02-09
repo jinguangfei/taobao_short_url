@@ -93,7 +93,11 @@ async def update_resource_status(
 async def create_resource(
     source_create: SourceCreate = Body(..., description="资源创建"),
 ):
-    source = await source_controller.create(source_create)
+    source, _ = await source_controller.update_or_create(
+        defaults=source_create.model_dump(exclude={"name","uniq_id"}),
+        name=source_create.name,
+        uniq_id=source_create.uniq_id
+    )
     data = await source.to_dict()
     return Success(
         data=data
