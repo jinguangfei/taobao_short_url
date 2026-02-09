@@ -39,14 +39,14 @@ class Task(object):
 
     # 等待timeout秒，获取结果
     async def get_result(self, name : str, task_id: str, timeout : int = 10) -> str | None:
-        task_result_key = self.task_result_key.format(name=name)
         result = None
         start_time = int(time.time())
-        while int(time.time()) - start_time < timeout:
-            #result : bytes = self.redis.hget(task_result_key, task_id)
-            with open(f"{self.data_dir}/{task_id}", "r") as f:
-                result = f.read()
+        while int(time.time()) - start_time < int(timeout):
+            if not result and os.path.exists(f"{self.data_dir}/{task_id}"):
+                with open(f"{self.data_dir}/{task_id}", "r") as f:
+                    result = f.read()
             if result:
+                result = result.decode("utf-8")
                 break
             await asyncio.sleep(0.2)
         return result

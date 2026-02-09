@@ -120,4 +120,8 @@ def parse_base64_img(img: str) -> bytes:
             data_str = data_str[comma_index + 1 :]
     return base64.b64decode(data_str)
 if __name__ == "__main__":
-    print(asyncio.run(get_proxies()))
+    #print(asyncio.run(get_proxies()))
+    with open("/Users/duchunxing/a","r") as f:
+        img = f.read()
+    with open("a.png","wb") as f:
+        f.write(parse_base64_img(img))

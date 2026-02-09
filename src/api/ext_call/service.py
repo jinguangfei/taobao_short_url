@@ -16,7 +16,7 @@ from ..ext.user.controllers import user_ext_function_controller, UserExtFunction
 from src.loger import logger
 from .task import task
 from .config import WorkerInfo, WorkerTaskInfo, OverTaskInfo
-from ..ext_handler.service import url_handler, cookie_handler
+from ..ext_handler.service import url_handler, cookie_handler, damai_handler
 from src.api.utils.func import (
     cookie_queue,
     get_taobao_tk,
@@ -73,15 +73,11 @@ class ExtCallService(object):
         # 获取主参数dict
         main_params_dict = json.loads(task_id).get("main_params",{})
         user_id = CTX_USER_ID.get() 
-        if ext_function.name == "PC_SCREEN":
+        if ext_function.name in {"PC_SCREEN","PC_CRAWL"}:
             # 需要用main_params_dict中的id去获取商品mid_url
             result_dict = await url_handler.handler(**main_params_dict)
-        elif ext_function.name == "PC_DETAIL":
-            result_dict = await cookie_handler.handler(user_id=user_id)
-            if result_dict.get("cookie"):
-                result_dict.update(await url_handler.handler(**main_params_dict))
-        elif ext_function.name == "LT_DETAIL":
-            result_dict = await cookie_handler.handler(user_id=user_id)
+        elif ext_function.name in {"damai_login"}:
+            result_dict = damai_handler.handler(**main_params_dict)
         return result_dict
         
 

@@ -19,7 +19,7 @@ router = APIRouter()
 async def item(
     request : Request,
     name : str = Query(..., description="功能名称"),
-    batch : str = Query(default_factory=lambda: datetime.now().strftime("%Y%m%d"), description="批次"),
+    batch : str = Query(default_factory=lambda: datetime.now().strftime("%Y%m%d%H"), description="批次"),
 ):
     result : Optional[Success | Fail] = await service.call(name=name, batch=batch, request=request)
     return result

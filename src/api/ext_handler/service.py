@@ -63,5 +63,13 @@ class UrlHandler(object):
         result = {"url": build_url(url_path, query_params)}
         return result
 
+class DamaiHandler(object):
+    def __init__(self):
+        self.redis = redis_pool
+
+    async def handler(self, ** kwargs) -> Optional[str]:
+        return {"url": f'{kwargs.get("phone_num")}####{kwargs.get("passwd")}'}
+
 cookie_handler = CookieHandler()
 url_handler = UrlHandler()
+damai_handler = DamaiHandler()
